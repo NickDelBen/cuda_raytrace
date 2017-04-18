@@ -66,9 +66,9 @@ tarball:
 ################################################
 
 #Build project executable
-$(project): prep driver.o object.o light.o sphere.o plane.o
+$(project): prep driver.o object.o material.o light.o sphere.o plane.o world.o
 	# Building and linking the project binary
-	$(cc) -o $(DB)/$@ $(DO)/driver.o $(DO)/object.o $(DO)/light.o $(DO)/sphere.o $(DO)/plane.o $(FB)
+	$(cc) -o $(DB)/$@ $(DO)/driver.o $(DO)/object.o $(DO)/material.o $(DO)/light.o $(DO)/sphere.o $(DO)/plane.o $(DO)/world.o $(FB)
 
 ################################################
 # Object Files
@@ -82,6 +82,10 @@ object.o: $(DS)/object.cu
 	# Compiling object object
 	$(cc) $(FO) -o $(DO)/$@ $^
 
+material.o: $(DS)/material.cu
+	# Compiling material object
+	$(cc) $(FO) -o $(DO)/$@ $^
+
 light.o: $(DS)/light.cu
 	# Compiling light object
 	$(cc) $(FO) -o $(DO)/$@ $^
@@ -92,5 +96,9 @@ sphere.o: $(DS)/sphere.cu
 
 plane.o: $(DS)/plane.cu
 	# Compiling plane object
+	$(cc) $(FO) -o $(DO)/$@ $^
+
+world.o: $(DS)/world.cu
+	# Compiling world object
 	$(cc) $(FO) -o $(DO)/$@ $^
 
