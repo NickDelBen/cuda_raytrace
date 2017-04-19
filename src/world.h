@@ -6,6 +6,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "material.h"
 #include "light.h"
@@ -28,9 +29,30 @@ typedef struct world_t {
 
 /******************************
 * Reads the details of a world from the specified file
-* NOTE: Must free result with World_free()
+* NOTE: Must free result with World_freeHost()
 * @param file File to read world from
+* @return pointer to location of new world on host
 ******************************/
-world_t* World_read(FILE* file);
+world_t* World_read (FILE* file);
+
+/******************************
+* Copies the specified world to the device
+* NOTE: Must free result with World_freeDevice()
+* @param source World to copy to device
+* @return pointer to location of new world on device
+******************************/
+world_t* World_toDevice (world_t* source);
+
+/******************************
+* Frees resources allocated for a world on the host
+* @param world Pointer to location on host of world to free
+******************************/
+void World_freeHost (world_t* world);
+
+/******************************
+* Frees resources allocated for a world on the device
+* @param world Pointer to location on device of World to free
+******************************/
+void World_freeDevice (world_t* world);
 
 #endif

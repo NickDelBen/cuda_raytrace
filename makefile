@@ -19,7 +19,7 @@ FNV=-Wno-deprecated-gpu-targets
 # Compiler flags to use for debugging
 FD=$(FNV) -Wall -g 
 # Compiler flags to use for object files
-FO=$(FNV)-c 
+FO=$(FNV) -c 
 # Compiler Flags to use for binaries
 FB=$(FNV) 
 
@@ -55,10 +55,10 @@ documentation:
 	#Generating documentaton
 	doxygen Doxyfile
 
-# Tar the project to make it easier to move around
+# Tar the project to make it more portable
 tarball:
 	# Creating tarball
-	tar -zcv -f $(project).tar.gz makefile src README{.src,,.txt,.md} {D,d}oxyfile
+	tar -zcv -f $(project).tar.gz Makefile src README{.src,,.txt,.md} Doxyfile
 
 
 ################################################
@@ -66,9 +66,9 @@ tarball:
 ################################################
 
 #Build project executable
-$(project): prep driver.o object.o material.o light.o sphere.o plane.o world.o
+$(project): prep driver.o object.o material.o light.o sphere.o plane.o world.o camera.o
 	# Building and linking the project binary
-	$(cc) -o $(DB)/$@ $(DO)/driver.o $(DO)/object.o $(DO)/material.o $(DO)/light.o $(DO)/sphere.o $(DO)/plane.o $(DO)/world.o $(FB)
+	$(cc) -o $(DB)/$@ $(DO)/driver.o $(DO)/object.o $(DO)/material.o $(DO)/light.o $(DO)/sphere.o $(DO)/plane.o $(DO)/world.o $(DO)/camera.o $(FB)
 
 ################################################
 # Object Files
@@ -100,5 +100,9 @@ plane.o: $(DS)/plane.cu
 
 world.o: $(DS)/world.cu
 	# Compiling world object
+	$(cc) $(FO) -o $(DO)/$@ $^
+
+camera.o: $(DS)/camera.cu
+	# Compiling camera object
 	$(cc) $(FO) -o $(DO)/$@ $^
 
