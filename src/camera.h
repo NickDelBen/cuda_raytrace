@@ -14,6 +14,8 @@ typedef struct camera_t {
 	float position[3];    // Position of camera eye
 	float top_right[3];   // First corner of imaging plane
 	float bottom_left[3]; // Second corner of imaging plane
+	float height;         // Height of imaging plane view box
+	float width;          // Width of imaging plane view box
 } camera_t;
 
 /******************************
@@ -31,13 +33,6 @@ camera_t* Camera_read (FILE* file);
 * @return pointer to location of new camera on device
 ******************************/
 camera_t* Camera_toDevice (camera_t* source);
-
-/******************************
-* Creates the rays from a camera on the device
-* @param camera Camera on device to create rays for
-* @param rays   Pointer to memory allocated on device for rays
-******************************/
-__global__ void Camera_createRays (camera_t* camera, line_t* rays);
 
 /******************************
 * Frees resources allocated for a camera on the host

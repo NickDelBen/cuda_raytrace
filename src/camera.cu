@@ -10,6 +10,9 @@ camera_t* Camera_read (FILE* file)
 		&(result->top_right[0]), &(result->top_right[1]), &(result->top_right[2]), 
 		&(result->bottom_left[0]), &(result->bottom_left[1]), &(result->bottom_left[2]));
 
+	result->width = ;
+	result->height = ;
+
 	return result;
 }
 
@@ -24,12 +27,6 @@ camera_t* Camera_toDevice (camera_t* source)
 	cudaMemcpy(result, source, sizeof(camera_t), cudaMemcpyHostToDevice);
 
 	return result;
-}
-
-// Creates the rays from a camera on the device
-__global__ void Camera_createRays (camera_t* camera, line_t* rays)
-{
-	printf("This is dog\n");
 }
 
 // Frees resources allocated for a camera on the host
