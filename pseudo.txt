@@ -1,0 +1,36 @@
+# Generate rays
+# dRays is a matrix equivalent to the imagging plane in dimension. Each cell in the matrix contains the equation for the ray that goes through the imagging plane pixel at the (x, y) coordinates.
+generate_rays<<<BLOCKS, THREADS>>>(dRays, dim.x, dim.y)
+
+# Trace rays
+trace_rays<<<BLOCKS, THREADS>>>(dRays, dim.x, dim.y)
+
+# Animate rays
+For each object in the scene:
+	change equation - animate
+
+
+generate_rays(dRays, dim.x, dim.y):
+
+	Divide and conqure matrix.
+	Calculate ray for each cell in the matrix.
+
+
+trace_rays(dRays, dim.x, dim.y):
+	
+	Divide and conqure matrix.
+
+	While all reflected rays are computed or while reflected ray degree < MAX:
+
+		for each object in scene:
+
+			if ray intersects object:
+
+				for each light in scene: 
+					Calculate shadow ray
+
+				Calculate reflected ray
+
+		Add color to local colors array.
+
+	Copy colors to global memory.
