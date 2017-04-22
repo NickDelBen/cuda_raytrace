@@ -66,9 +66,9 @@ tarball:
 ################################################
 
 #Build project executable
-$(project): prep driver.o object.o material.o light.o sphere.o plane.o world.o camera.o raytracer.o
+$(project): prep driver.o object.o material.o light.o sphere.o plane.o world.o camera.o raytracer.o vector3.o
 	# Building and linking the project binary
-	$(cc) -o $(DB)/$@ $(DO)/driver.o $(DO)/object.o $(DO)/material.o $(DO)/light.o $(DO)/sphere.o $(DO)/plane.o $(DO)/world.o $(DO)/camera.o $(DO)/raytracer.o $(FB)
+	$(cc) -o $(DB)/$@ $(DO)/driver.o $(DO)/object.o $(DO)/material.o $(DO)/light.o $(DO)/sphere.o $(DO)/plane.o $(DO)/world.o $(DO)/vector3.o $(DO)/camera.o $(DO)/raytracer.o $(FB)
 
 ################################################
 # Object Files
@@ -100,6 +100,10 @@ plane.o: $(DS)/plane.cu
 
 world.o: $(DS)/world.cu
 	# Compiling world object
+	$(cc) $(FO) -o $(DO)/$@ $^
+
+vector3.o: $(DS)/vector3.cu
+	# Compiling vector object
 	$(cc) $(FO) -o $(DO)/$@ $^
 
 camera.o: $(DS)/camera.cu

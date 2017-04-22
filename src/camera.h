@@ -4,18 +4,23 @@
 #ifndef _h_camera
 #define _h_camera
 
+#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "line.h"
+#include "vector3.h"
 
 // Defines a camera
 typedef struct camera_t {
-	float position[3];    // Position of camera eye
-	float top_right[3];   // First corner of imaging plane
-	float bottom_left[3]; // Second corner of imaging plane
-	float height;         // Height of imaging plane view box
-	float width;          // Width of imaging plane view box
+	float top_right[3];    // First corner of imaging plane
+	float bottom_left[3];  // Second corner of imaging plane
+	float top_left[3];     // Top left of imaging plane
+	float bottom_right[3]; // Bottom right of imaging plane
+	float height;          // Height of imaging plane view box
+	float width;           // Width of imaging plane view box
+	float comp_vert[3];    // Vertical unit component of imaging plane
+	float comp_horiz[3];   // Horizontal component of imaging plane
+	float normal[3];       // Normal to imaging plane
 } camera_t;
 
 /******************************
@@ -33,6 +38,12 @@ camera_t* Camera_read (FILE* file);
 * @return pointer to location of new camera on device
 ******************************/
 camera_t* Camera_toDevice (camera_t* source);
+
+/******************************
+* Calculate the camera direction vectors and normal
+* @param cam Camera to calculate direction vectors for
+******************************/
+void Camera_calculateVectors (camera_t* cam);
 
 /******************************
 * Frees resources allocated for a camera on the host

@@ -4,6 +4,10 @@
 #include "camera.h"
 #include "world.h"
 #include "line.h"
+#include "raytracer.h"
+
+#define BLOCKS 32
+#define THREADS 32
 
 int main(int argc, char ** argv)
 {
@@ -19,6 +23,9 @@ int main(int argc, char ** argv)
 
 	printf("Read world background=(%hu, %hu, %hu)   gloabl_ambient=%f\n", w->bg[0], w->bg[1], w->bg[2], w->global_ambient);
 
+	Camera_calculateVectors(c);
+	printf("Calculated camera components and normal");
+
 	camera_t* d_c = Camera_toDevice(c);
 	printf("Copied camera to device\n");
 
@@ -28,10 +35,13 @@ int main(int argc, char ** argv)
 
 
 
+
+
+
 	line_t* d_r;
 	cudaMalloc(&d_r, 256);
-	Camera_createRays<<<1, 1>>>(d_c, d_r);
-	printf("Created rays from camera on device\n");
+	// Camera_createRays(d_c, d_r, BLOCKS, THREADS);
+	// printf("Created rays from camera on device\n");
 
 	cudaFree(d_r);
 	printf("Freed rays from device\n");
