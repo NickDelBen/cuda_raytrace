@@ -17,7 +17,7 @@ __global__ void Camera_createRays_k (camera_t* camera, line_t* rays, unsigned in
 	unsigned int thread_real, per_thread, current_ray, current_pos;
 
 	// Find real thread index
-	thread_real = gridDim.x * blockIdx.x + threadIdx.x;
+	thread_real = blockDim.x * blockIdx.x + threadIdx.x;
 	// Find amount of work this thread has to do
 	per_thread = thread_real < extra ? to_do + 1 : to_do;
 	// Find out the starting ray index for this thread
