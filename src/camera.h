@@ -8,13 +8,15 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "camera.h"
+#include "line.h"
 #include "vector3.h"
 
 // Defines a camera
 typedef struct camera_t {
-	float top_right[3];    // First corner of imaging plane
 	float bottom_left[3];  // Second corner of imaging plane
 	float top_left[3];     // Top left of imaging plane
+	float top_right[3];    // First corner of imaging plane
 	float bottom_right[3]; // Bottom right of imaging plane
 	float height;          // Height of imaging plane view box
 	float width;           // Width of imaging plane view box
@@ -30,6 +32,22 @@ typedef struct camera_t {
 * @return pointer to location of new camera on host
 ******************************/
 camera_t* Camera_read (FILE* file);
+
+/******************************
+* Creates the rays from a camera on the device
+* @param camera Camera on device to create rays for
+* @param rays   Pointer to memory allocated on device for rays
+******************************/
+void Camera_createRays (camera_t* camera, line_t* rays, unsigned int blocks, unsigned int threads);
+
+/******************************
+* Kernel for creating the rays from a camera on the device
+* @param camera Camera on device to create rays for
+* @param rays   Pointer to memory allocated on device for rays
+* @param to_do  Number of rays to be created per thread
+* @param extra  How many sections need one additional ray
+******************************/
+__global__ void Camera_createRays_k (camera_t* camera, line_t* rays, unsigned int to_do, unsigned int extra);
 
 /******************************
 * Copies the specified camera to the device
