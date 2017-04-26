@@ -20,17 +20,17 @@ camera_t* Camera_read (FILE* file)
 	result->height = floor(VECTOR_LENGTH(result->comp_vert));
 
 	Camera_calculateVectors(result);
-	printf("Calculated camera components and normal");
 
 	return result;
 }
 
 // Creates the rays from a camera on the device
-void Camera_createRays (camera_t* camera, line_t* rays, unsigned int blocks, unsigned int threads)
+void Camera_createRays (camera_t* h_camera, camera_t* d_camera, line_t* rays, unsigned int blocks, unsigned int threads)
 {
 	unsigned int per_warp = blocks * threads;
-	unsigned int num_rays = camera->width * camera->height;
-	Camera_createRays_k<<<blocks, threads>>>(camera, rays, num_rays / per_warp, num_rays % per_warp);
+	unsigned int num_rays = h_camera->width * h_camera->height;
+	printf("Executing kernel\n\n\n");
+	Camera_createRays_k<<<blocks, threads>>>(d_camera, rays, num_rays / per_warp, num_rays % per_warp);
 }
 
 

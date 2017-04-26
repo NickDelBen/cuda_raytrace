@@ -32,28 +32,28 @@ int main(int argc, char **argv)
 
 	line_t* d_r;
 	cudaMalloc(&d_r, size);
-	Camera_createRays(d_c, d_r, BLOCKS, THREADS);
+	Camera_createRays(c, d_c, d_r, BLOCKS, THREADS);
 	printf("Created rays from camera on device\n");
 	
-	// Create frame
-	color_t *f, *d_f;
+	// // Create frame
+	// color_t *f, *d_f;
 
-	f = (color_t*)malloc(sizeof(color_t) * size);
-	cudaMalloc(&d_f, sizeof(color_t) * size);
+	// f = (color_t*)malloc(sizeof(color_t) * size);
+	// cudaMalloc(&d_f, sizeof(color_t) * size);
 
-	// while (true) {
+	// // while (true) {
 
-		trace(f, d_f, d_r, w, size);
-		// paint(f);
-		// animate(w);
+	// 	trace(f, d_f, d_r, w, size);
+	// 	// paint(f);
+	// 	// animate(w);
 
-	// }
+	// // }
 
-	cudaFree(d_r);
-	printf("Freed frame on host\n");
+	// cudaFree(d_r);
+	// printf("Freed frame on host\n");
 
-	free(f);
-	printf("Freed frame on device\n");
+	// free(f);
+	// printf("Freed frame on device\n");
 
 	cudaFree(d_r);
 	printf("Freed rays on device\n");
