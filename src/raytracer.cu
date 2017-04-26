@@ -96,4 +96,4 @@ __device__ void Raytracer_calculatePixelColor(color_t *color, world_t *d_w,
     //     color->b = fmin(shading_model.b, 255);
     //     color->g = fmin(shading_model.g, 255);
     // }
-}	
+}
