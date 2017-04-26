@@ -12,10 +12,11 @@
 #include "light.h"
 #include "plane.h"
 #include "sphere.h"
+#include "color.h"
 
 // Defines a world
 typedef struct world_t {
-	unsigned short int bg[3]; // Color of world background
+	color_t bg; 			  // Color of world background
 	float global_ambient;     // Global ambient light
 	unsigned int n_lights;    // Number of lights in the world
 	unsigned int n_materials; // Number of materials in the world

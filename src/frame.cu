@@ -4,17 +4,18 @@
 // Initialize the frame
 __global__ void Frame_init (color_t *frame, int size)
 {
-	int b_size 	= size / gridDim.x,
-		t_size 	= b_size / blockDim.x,
-		offset 	= blockIdx.x * b_size + threadIdx.x * t_size;
+	int b_work 		= size / gridDim.x,
+		t_work 		= b_work / blockDim.x,
+		t_offset 	= threadIdx.x * t_work,
+		offset 		= blockIdx.x * b_work + t_offset;
 
-	color_t *thread_pixles = (color_t*)malloc(sizeof(color_t) * t_size);
+	extern __shared__ color_t thread_pixles[];
 
-	for (int i = 0; i < t_size; ++i) {
+	for (int i = t_offset; i < t_offset + t_work; ++i) {
 		thread_pixles[i].r = 0;
 		thread_pixles[i].g = 0;
 		thread_pixles[i].b = 0;
 	}
 
-	memcpy(&frame[offset], &thread_pixles, sizeof(color_t) * t_size);
+	memcpy(&frame[offset], &thread_pixles[t_offset], sizeof(color_t) * t_work);
 }

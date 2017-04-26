@@ -14,7 +14,7 @@ DS=src
 DD=doc
 
 # NVIDIA COMPILER FLAGS
-FNV=-Wno-deprecated-gpu-targets 
+FNV=-Wno-deprecated-gpu-targets
 #FNV=-c -O2 --compiler-bindir /usr/bin
 # Compiler flags to use for debugging
 FD=$(FNV) -Wall -g 
@@ -66,9 +66,9 @@ tarball:
 ################################################
 
 #Build project executable
-$(project): prep driver.o object.o material.o light.o sphere.o plane.o world.o camera.o raytracer.o vector3.o frame.o color.o
+$(project): prep driver.o object.o material.o light.o sphere.o plane.o world.o camera.o raytracer.o vector3.o frame.o
 	# Building and linking the project binary
-	$(cc) -o $(DB)/$@ $(DO)/driver.o $(DO)/object.o $(DO)/material.o $(DO)/light.o $(DO)/sphere.o $(DO)/plane.o $(DO)/world.o $(DO)/vector3.o $(DO)/camera.o $(DO)/raytracer.o $(DO)/frame.o $(DO)/color.o $(FB)
+	$(cc) -o $(DB)/$@ $(DO)/driver.o $(DO)/object.o $(DO)/material.o $(DO)/light.o $(DO)/sphere.o $(DO)/plane.o $(DO)/world.o $(DO)/vector3.o $(DO)/camera.o $(DO)/raytracer.o $(DO)/frame.o $(FB)
 
 ################################################
 # Object Files
@@ -116,9 +116,5 @@ raytracer.o: $(DS)/raytracer.cu
 
 frame.o: $(DS)/frame.cu
 	# Compiling frame object
-	$(cc) $(FO) -o $(DO)/$@ $^
-
-color.o: $(DS)/color.cu
-	# Compiling color object
 	$(cc) $(FO) -o $(DO)/$@ $^
 
