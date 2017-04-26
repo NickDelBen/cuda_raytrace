@@ -58,7 +58,7 @@ __global__ void Raytracer_trace (line_t *d_r, color_t *d_f, world_t *d_w,
 	}
 
 	// Copy the results of the trace on the frame tile to the global memory.
-	// memcpy(&d_r[offset], &rays, sizeof(line_t) * t_work);
+	memcpy(&d_r[offset], &rays[t_offset], sizeof(line_t) * t_work);
 	memcpy(&d_f[offset], &frame[t_offset], sizeof(color_t) * t_work);
 }
 
@@ -96,4 +96,4 @@ __device__ void Raytracer_calculatePixelColor(color_t *color, world_t *d_w,
     //     color->b = fmin(shading_model.b, 255);
     //     color->g = fmin(shading_model.g, 255);
     // }
-}
+}	
