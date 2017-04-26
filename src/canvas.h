@@ -17,7 +17,7 @@
 
 #define WINDOW_TITLE_BUFFER 256
 #define MESSAGE_BUFFER 512
-#define DEAFULT_REDRAW_DELAY 100
+#define DEFAULT_REDRAW_DELAY 100
 #define DEFAULT_WINDOW_X 50
 #define DEFAULT_WINDOW_Y 50
 
@@ -40,6 +40,16 @@ typedef struct canvas_t {
 * @param window_title Name of the opengl window
 **********************/
 canvas_t* Canvas_create (int height, int width, char* window_name);
+
+/***********************
+* Sets the pixel at the current location to the specified value
+* @param x x-coordinate of the pixel to set
+* @param y y-coordinate of the pixel to set
+* @param r red value of the pixel
+* @param g freen value of the pixel
+* @param b blue value of the pixel
+***********************/
+void Canvas_setPixel(int x, int y, int r, int g, int b);
 
 /**********************
 * Set the loop function for the canvas.

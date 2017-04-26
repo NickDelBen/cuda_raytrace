@@ -3,19 +3,19 @@
 
 canvas_t* global_canvas;
 // Reshape the window event handler
-void reshape(int w, int h);
+void can_reshape(int w, int h);
 // Preform the actual display
 void can_display();
 // Callback for timing loops
-void timer_callback(unsigned int t);
+void timer_callback(int t);
 
 // Creates a new canvas
-void Canvas_create (int height, int width, char* window_name)
+canvas_t* Canvas_create (int height, int width, char* window_name)
 {
 	// Allocate resources for canvas
-	canvas_t* result = malloc(sizeof(canvas_t));
+	canvas_t* result = (canvas_t*) malloc(sizeof(canvas_t));
 	// Allocate memory for pixels
-	result->pixels = malloc(sizeof(color_t) * height * width);
+	result->pixels = (color_t*) malloc(sizeof(color_t) * height * width);
 
 	// Store given data for canvas
 	result->width = width;
@@ -24,6 +24,19 @@ void Canvas_create (int height, int width, char* window_name)
 	strcpy(result->window_name, window_name);
 	// Set default frame delay
 	result->delay = DEFAULT_REDRAW_DELAY;
+
+	return result;
+}
+
+// Sets the pixel at the current location to the specified value
+void Canvas_setPixel(int x, int y, int r, int g, int b)
+{
+   color_t* t;
+
+   t = &(global_canvas->pixels[y * global_canvas->width + x]);
+   t->r = r;
+   t->g = g;
+   t->b = b;
 }
 
 // Set the loop function for the canvas.
@@ -41,12 +54,12 @@ void Canvas_startLoop (canvas_t* can, int argc, char** argv)
 	global_canvas = can;
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB);
-	glutInitWindowSize(can->height, can->width);
+	glutInitWindowSize(global_canvas->height, global_canvas->width);
 	glutInitWindowPosition(DEFAULT_WINDOW_X, DEFAULT_WINDOW_Y);
-	glutCreateWindow(can->window_name);
+	glutCreateWindow(global_canvas->window_name);
 	glutDisplayFunc(can_display);
 	glutReshapeFunc(can_reshape);
-	timer_callback(can->delay);
+	timer_callback(global_canvas->delay);
 	glutMainLoop();
 }
 

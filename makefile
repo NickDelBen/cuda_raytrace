@@ -21,7 +21,7 @@ FD=$(FNV) -Wall -g
 # Compiler flags to use for object files
 FO=$(FNV) -c 
 # Compiler Flags to use for binaries
-FB=$(FNV) 
+FB=$(FNV) -lGL -lGLU -lglut
 
 ################################################
 # Build Commands
