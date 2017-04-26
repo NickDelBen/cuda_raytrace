@@ -9,7 +9,7 @@ world_t* World_read (FILE* file)
 	world_t* result = (world_t*) malloc(sizeof(world_t));
 
 	// Read background color of the world
-	fscanf(file, "BG %hu %hu %hu\n", &(result->bg[0]), &(result->bg[1]), &(result->bg[2]));
+	fscanf(file, "BG %hu %hu %hu\n", &(result->bg.r), &(result->bg.g), &(result->bg.b));
 	// Read global ambient brightness
 	fscanf(file, "AMB %f\n", &(result->global_ambient));
 

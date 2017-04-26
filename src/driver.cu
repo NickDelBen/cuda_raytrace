@@ -1,5 +1,14 @@
 
-#include "driver.h"
+#include <stdio.h>
+
+#include "camera.h"
+#include "world.h"
+#include "line.h"
+#include "raytracer.h"
+
+#define BLOCKS 32
+#define THREADS 256
+#define MAX_REFLECTIONS 10
 
 int main(int argc, char **argv)
 {
@@ -21,7 +30,8 @@ int main(int argc, char **argv)
 
 	world_t *w = World_read(fp);
 	printf("Read and created world on host\n");
-	printf("Read world background=(%hu, %hu, %hu)   gloabl_ambient=%f\n", w->bg[0], w->bg[1], w->bg[2], w->global_ambient);
+	printf("Read world background=(%hu, %hu, %hu)\tgloabl_ambient=%f\n",
+		w->bg.r, w->bg.g, w->bg.b, w->global_ambient);
 	
 	fclose(fp);
 
@@ -30,9 +40,9 @@ int main(int argc, char **argv)
 
 	int size = c->height * c->width;
 
-	line_t* d_r;
-	cudaMalloc(&d_r, size);
-	Camera_createRays(c, d_c, d_r, BLOCKS, THREADS);
+	line_t *d_r;
+	cudaMalloc(&d_r, sizeof(line_t) * size);
+	Camera_createRays(d_c, d_r, BLOCKS, THREADS);
 	printf("Created rays from camera on device\n");
 	
 	// // Create frame
@@ -43,9 +53,9 @@ int main(int argc, char **argv)
 
 	// // while (true) {
 
-	// 	trace(f, d_f, d_r, w, size);
-	// 	// paint(f);
-	// 	// animate(w);
+		// Raytracer(f, d_f, d_r, w, size, BLOCKS, THREADS, MAX_REFLECTIONS);
+		// paint(f);
+		// animate(w);
 
 	// // }
 
@@ -68,24 +78,4 @@ int main(int argc, char **argv)
 	printf("Freed world on host\n");
 
 	return EXIT_SUCCESS;
-}
-
-void trace(color_t *f, color_t * d_f, line_t *d_r, world_t *w, int size) {
-
-	world_t *d_w = World_toDevice(w);
-	printf("Copied world to device\n");
-
-	// Create and initialize frame
-	Frame_init<<<BLOCKS, THREADS>>>(d_f, size);
-
-	// for (int i = 0; i < MAX_REFLECTIONS; ++i) {
-
-	// }
-
-	World_freeDevice(d_w);
-	printf("Freed world on device\n");
-
-	// Copy frame to host
-	cudaMemcpy(f, d_f, sizeof(color_t) * size, cudaMemcpyDeviceToHost);
-
 }
