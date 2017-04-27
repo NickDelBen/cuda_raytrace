@@ -37,7 +37,7 @@ void Camera_createRays (camera_t* h_camera, camera_t* d_camera, line_t* rays, un
 __global__ void Camera_createRays_k (camera_t* camera, line_t* rays, unsigned int to_do, unsigned int extra)
 {
 	float start[3], curr[3];
-	unsigned int thread_real, per_thread, current_ray, current_pos;
+	unsigned int thread_real, per_thread, current_ray, current_pos, target;
 
 	// Find real thread index
 	thread_real = blockDim.x * blockIdx.x + threadIdx.x;
@@ -55,7 +55,8 @@ __global__ void Camera_createRays_k (camera_t* camera, line_t* rays, unsigned in
 	VECTOR_SCALE(curr, current_pos);
 	VECTOR_ADD(curr, curr, start);
 	// Calculate the rays this thread is responsible for
-	while (current_ray < current_ray + per_thread) {
+	target = current_ray + per_thread;
+	while (current_ray < target) {
 		// Store this ray in the result ray location
 		VECTOR_COPY(rays[current_ray].position, curr);
 		VECTOR_COPY(rays[current_ray].direction, camera->normal);
@@ -74,7 +75,6 @@ __global__ void Camera_createRays_k (camera_t* camera, line_t* rays, unsigned in
 			VECTOR_ADD(curr, curr, camera->comp_horiz);
 		}
 	}
-	printf("This is dog\n");
 }
 
 // Copies the specified camera to the device
