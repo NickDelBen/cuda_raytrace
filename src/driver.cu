@@ -21,7 +21,7 @@ world_t  *h_world;
 
 void do_work()
 {
-	Raytracer(canvas->pixels, d_frame, d_rays, h_world, h_camera->width * h_camera->height, BLOCKS, THREADS, MAX_REFLECTIONS);
+	Raytracer(d_frame, d_rays, h_world, h_camera->width * h_camera->height, BLOCKS, THREADS, MAX_REFLECTIONS);
 	// paint(f);
 	// animate(w);
 }
@@ -51,7 +51,9 @@ int main(int argc, char **argv)
 	d_camera = Camera_toDevice(h_camera);
 	printf("Copied camera to device\n");
 
-	int size = h_camera->height * h_camera->width;
+	int h = h_camera->height,
+		w = h_camera->width,
+		size = h * w;
 
 	cudaMalloc(&d_rays, sizeof(line_t) * size);
 	Camera_createRays(h_camera, d_camera, d_rays, BLOCKS, THREADS);
@@ -60,9 +62,10 @@ int main(int argc, char **argv)
 	cudaMalloc(&d_frame, sizeof(color_t) * size);
 	printf("Created space for frame result on device\n");
 
-
-	char* title = WINDOW_TITLE;
-	canvas = Canvas_create(h_camera->height, h_camera->width, title);
+	char* title = (char*)malloc(sizeof(char) * strlen(WINDOW_TITLE));
+	memcpy(title, WINDOW_TITLE, strlen(WINDOW_TITLE));
+	canvas = Canvas_create(h, w, title);
+	free(title);
 	printf("Created canvas\n");
 
 	Canvas_setRenderFunction(canvas, do_work, 1000);
@@ -71,9 +74,6 @@ int main(int argc, char **argv)
 	// Begin the main render loop
 	printf("Beginning raytracer loop\n");
 	// Canvas_startLoop(canvas, argc, argv);
-
-
-
 
 	Canvas_free(canvas);
 	printf("Freed canvas");

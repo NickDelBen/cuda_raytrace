@@ -27,18 +27,11 @@ world_t* World_read (FILE* file)
 		Material_readTo(file, &(result->materials[item_i]));
 	}
 
-	// Read the spheres
-	fscanf(file, "SPHERES %u\n", &(result->n_spheres));
-	result->spheres = (sphere_t*) malloc(sizeof(sphere_t) * result->n_spheres);
-	for (item_i = 0; item_i < result->n_spheres; item_i++) {
-		Sphere_readTo(file, &(result->spheres[item_i]));
-	}
-
-	// Read the planes
-	fscanf(file, "PLANES %u\n", &(result->n_planes));
-	result->planes = (plane_t*) malloc(sizeof(plane_t) * result->n_planes);
-	for (item_i = 0; item_i < result->n_planes; item_i++) {
-		Plane_readTo(file, &(result->planes[item_i]));
+	// Read the objects
+	fscanf(file, "OBJECTS %u\n", &(result->n_objects));
+	result->objects = (object_t*) malloc(sizeof(object_t) * result->n_objects);
+	for (item_i = 0; item_i < result->n_objects; item_i++) {
+		Object_readTo (file, &(result->objects[item_i]));
 	}
 
 	return result;
@@ -57,13 +50,11 @@ world_t* World_toDevice (world_t* source)
 	// Allocare space for the world objects
 	cudaMalloc(&(result->lights), sizeof(light_t) * source->n_lights);
 	cudaMalloc(&(result->materials), sizeof(material_t) * source->n_materials);
-	cudaMalloc(&(result->spheres), sizeof(sphere_t) * source->n_spheres);
-	cudaMalloc(&(result->planes), sizeof(plane_t) * source->n_planes);
+	cudaMalloc(&(result->objects), sizeof(object_t) * source->n_objects);
 	// Copy the world object data to the device
 	cudaMemcpy(result->lights, source->lights, sizeof(light_t) * source->n_lights, cudaMemcpyHostToDevice);
 	cudaMemcpy(result->materials, source->materials, sizeof(material_t) * source->n_materials, cudaMemcpyHostToDevice);
-	cudaMemcpy(result->spheres, source->spheres, sizeof(sphere_t) * source->n_spheres, cudaMemcpyHostToDevice);
-	cudaMemcpy(result->planes, source->planes, sizeof(plane_t) * source->n_planes, cudaMemcpyHostToDevice);
+	cudaMemcpy(result->objects, source->objects, sizeof(object_t) * source->n_objects, cudaMemcpyHostToDevice);
 
 	// Allocate space for the world on the device
 	cudaMalloc(&final, sizeof(world_t));
@@ -82,10 +73,8 @@ void World_freeHost (world_t* world)
 	free(world->lights);
 	// Free memory allocated for materials
 	free(world->materials);
-	// Free memory allocated for spheres
-	free(world->spheres);
-	// Free memory allocated for planes
-	free(world->planes);
+	// Free memory allocated for objects
+	free(world->objects);
 	// Free memory allocated for world object
 	free(world);
 }
@@ -100,10 +89,8 @@ void World_freeDevice (world_t* world)
 	cudaFree(temp->lights);
 	// Free memory allocated for materials
 	cudaFree(temp->materials);
-	// Free memory allocated for spheres
-	cudaFree(temp->spheres);
-	// Free memory allocated for planes
-	cudaFree(temp->planes);
+	// Free memory allocated for objects
+	cudaFree(temp->objects);
 	// Free memory allocated for world object
 	cudaFree(world);
 	// Free temporary memory to get device address locations

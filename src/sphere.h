@@ -6,12 +6,10 @@
 
 #include <stdio.h>
 
-#include "object.h"
-
 // Defines a sphere
 typedef struct sphere_t {
-	object_t props; // Object properties of the sphere
-	float radius;   // Radius of the sphere
+	float center[3]; 	// Position of the object
+	float radius;   	// Radius of the sphere
 } sphere_t;
 
 /******************************

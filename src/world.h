@@ -8,10 +8,9 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "object.h"
 #include "material.h"
 #include "light.h"
-#include "plane.h"
-#include "sphere.h"
 #include "color.h"
 
 // Defines a world
@@ -20,12 +19,10 @@ typedef struct world_t {
 	float global_ambient;     // Global ambient light
 	unsigned int n_lights;    // Number of lights in the world
 	unsigned int n_materials; // Number of materials in the world
-	unsigned int n_spheres;   // Number of spheres in the world
-	unsigned int n_planes;    // Number of planes in the world
+	unsigned int n_objects;   // Number of spheres in the world
 	light_t* lights;          // Lights in the world
 	material_t* materials;    // Material details in the world
-	sphere_t* spheres;        // Spheres in the world
-	plane_t* planes;          // Planes in the world
+	object_t* objects;        // Objects in the world
 } world_t;
 
 /******************************
