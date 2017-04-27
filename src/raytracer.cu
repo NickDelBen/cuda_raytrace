@@ -85,6 +85,10 @@ __device__ void Raytracer_calculatePixelColor (color_t * color, world_t  * d_w,
     if (object != NULL) {
     	Raytracer_evaluateShadingModel(&shading_model, d_w, object, ray,
     		distance);
+
+        color->r = min(shading_model.r, 255);
+        color->b = min(shading_model.b, 255);
+        color->g = min(shading_model.g, 255);
     }
 }
 
