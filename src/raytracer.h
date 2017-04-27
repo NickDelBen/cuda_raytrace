@@ -38,12 +38,23 @@ __global__ void Raytracer_trace (line_t * d_r, color_t * d_f, world_t * d_w,
 
 /******************************
 * Calculates the color of each pixel.
-* @param color A pointer that will container the resultant color.
+* @param color A pointer that will containe the resultant color.
 * @param w     A pointer to the world object.
 * @param ray   A pointer to a line_t object that has the ray equation.
 ******************************/
 __device__ void Raytracer_calculatePixelColor (color_t *color, world_t *d_w,
 	line_t *ray);
+
+/******************************
+* Calculates the shading model of each pixel.
+* @param shading_model A pointer that will containe the resultant color.
+* @param d_w           A pointer to the world object.
+* @param i_object      A pointer to the object that is intersected.
+* @param ray           A pointer to a line_t object that has the ray equation.
+* @param distance      The distance between the camera and object.
+******************************/
+__device__ void Raytracer_evaluateShadingModel (color_t * shading_model,
+	world_t  * d_w, object_t * i_object, line_t * ray, float distance);
 
 /******************************
 * Calculates the diffuse factor.

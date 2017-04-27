@@ -61,7 +61,8 @@ __global__ void Raytracer_trace (line_t * d_r, color_t * d_f, world_t * d_w,
 __device__ void Raytracer_calculatePixelColor (color_t * color, world_t  * d_w,
 	line_t * ray)
 {
-    color_t bg = d_w->bg;
+    color_t bg = d_w->bg,
+    		shading_model;
 
     //sets the pixel color to the default background color
     color->r = bg.r;
@@ -82,21 +83,22 @@ __device__ void Raytracer_calculatePixelColor (color_t * color, world_t  * d_w,
     }
 
     if (object != NULL) {
-    	// Raytracer_evaluateShadingModel();
+    	Raytracer_evaluateShadingModel(&shading_model, d_w, object, ray,
+    		distance);
     }
 }
 
 __device__ void Raytracer_evaluateShadingModel (color_t * shading_model,
-	world_t  * d_w, object_t * i_object, material_t * material, line_t * ray,
-	float distance)
+	world_t  * d_w, object_t * i_object, line_t * ray, float distance)
 {
-	float ambient = d_w->global_ambient * material->i_ambient,
+	material_t material = d_w->materials[i_object->mat];
+	float ambient = d_w->global_ambient * material.i_ambient,
 	 	  intersection[3], normal[3],
 	 	  diffuse, specular, shading;
 
-    shading_model->r = material->color[0] * ambient;
-    shading_model->b = material->color[1] * ambient;
-    shading_model->g = material->color[2] * ambient;
+    shading_model->r = material.color[0] * ambient;
+    shading_model->b = material.color[1] * ambient;
+    shading_model->g = material.color[2] * ambient;
 
     //finds the intersection point
     Raytracer_findIntersectionPoint(intersection, ray, distance);
@@ -137,14 +139,14 @@ __device__ void Raytracer_evaluateShadingModel (color_t * shading_model,
         //computes the shading
         diffuse = Raytracer_diffuse(normal, light_ray.direction);
         specular = Raytracer_specular(ray->direction, normal, light_ray.direction,
-        	material->specular_power);
+        	material.specular_power);
 
         // //computes reflection
         // calculate_pixel_color(&reflection_color, raytracer,
         //     &intersection, &reflection_ray, depth - 1);
 
-        shading = light.i * (material->i_diffuse * diffuse + 
-            material->i_specular * specular);
+        shading = light.i * (material.i_diffuse * diffuse + 
+            material.i_specular * specular);
 
         // color_t color;
         // COLOR_COPY(color, light.color);
