@@ -9,11 +9,14 @@ void Object_readTo (FILE* file, object_t* object)
 	switch(object->type) {
 
 		case SPHERE: {
-			Sphere_readTo(file, object->sphere);
+			printf("Reading sphere\n");
+			Sphere_readTo (file, object->sphere);
+			printf("Read sphere\n");
 		} break;
 
 		case TRIANGLE: {
-			Triangle_readTo(file, object->triangle);
+			printf("Read triangle\n");
+			Triangle_readTo (file, object->triangle);
 		} break;
 
 	}

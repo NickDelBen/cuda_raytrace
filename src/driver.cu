@@ -73,10 +73,10 @@ int main(int argc, char **argv)
 
 	// Begin the main render loop
 	printf("Beginning raytracer loop\n");
-	// Canvas_startLoop(canvas, argc, argv);
+	Canvas_startLoop(canvas, argc, argv);
 
 	Canvas_free(canvas);
-	printf("Freed canvas");
+	printf("Freed canvas\n");
 
 	cudaFree(d_frame);
 	printf("Freed frame on device\n");

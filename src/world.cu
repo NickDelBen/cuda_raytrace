@@ -13,6 +13,7 @@ world_t* World_read (FILE* file)
 	// Read global ambient brightness
 	fscanf(file, "AMB %f\n", &(result->global_ambient));
 
+	printf("Reading lights\n");
 	// Read the lights
 	fscanf(file, "LIGHTS %u\n", &(result->n_lights));
 	result->lights = (light_t*) malloc(sizeof(light_t) * result->n_lights);
@@ -20,6 +21,7 @@ world_t* World_read (FILE* file)
 		Light_readTo(file, &(result->lights[item_i]));
 	}
 
+	printf("Reading Materials\n");
 	// Read the materials
 	fscanf(file, "MATERIALS %u\n", &(result->n_materials));
 	result->materials = (material_t*) malloc(sizeof(material_t) * result->n_materials);
@@ -27,11 +29,12 @@ world_t* World_read (FILE* file)
 		Material_readTo(file, &(result->materials[item_i]));
 	}
 
+	printf("Reading Objects\n");
 	// Read the objects
 	fscanf(file, "OBJECTS %u\n", &(result->n_objects));
 	result->objects = (object_t*) malloc(sizeof(object_t) * result->n_objects);
 	for (item_i = 0; item_i < result->n_objects; item_i++) {
-		Object_readTo (file, &(result->objects[item_i]));
+		Object_readTo(file, &(result->objects[item_i]));
 	}
 
 	return result;

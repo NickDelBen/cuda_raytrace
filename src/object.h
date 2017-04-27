@@ -14,8 +14,8 @@
 typedef struct {
 	char type; 					// Holds the type of the object
     union { 					// Object
-        sphere_t *sphere;
-        triangle_t *triangle;
+        sphere_t sphere;
+        triangle_t triangle;
     };
 	unsigned int mat; 			// ID of material properties of object
 } object_t;
