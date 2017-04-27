@@ -87,23 +87,51 @@ __device__ void Raytracer_calculatePixelColor (color_t * color, world_t  * d_w,
 }
 
 __device__ void Raytracer_evaluateShadingModel (color_t * shading_model,
-	world_t  * d_w, material_t * material, line_t * ray, float distance)
+	world_t  * d_w, object_t * i_object, material_t * material, line_t * ray,
+	float distance)
 {
-	float ambient = d_w->global_ambient * material->i_ambient,
-	 	  intersection[3];
+	// float ambient = d_w->global_ambient * material->i_ambient,
+	//  	  intersection[3];
 
-    shading_model->r = material->color[0] * ambient;
-    shading_model->b = material->color[1] * ambient;
-    shading_model->g = material->color[2] * ambient;
+ //    shading_model->r = material->color[0] * ambient;
+ //    shading_model->b = material->color[1] * ambient;
+ //    shading_model->g = material->color[2] * ambient;
 
-    //finds the intersection point
-    Raytracer_findIntersectionPoint(intersection, ray, distance);
+ //    //finds the intersection point
+ //    Raytracer_findIntersectionPoint(intersection, ray, distance);
 
-    // for (int i = 0; i < d_w->n_lights; ++i) {
+ //    line_t light_ray;
+ //    light_t * lights = d_w->lights,
+ //    		light;
+ //    object_t * objects = d_w->objects,
+ //    	     * object;
+ //    for (int i = 0; i < d_w->n_lights; ++i) {
+
+ //    	light = lights[i];
+
+ //    	VECTOR_SUB(light_ray.direction, light.pos, intersection);
+ //    	Vector_normalize(&light_ray);
+
+ //    	for (int j = 0; j < d_w->n_objects; ++j) {
+
+ //    		object = &(objects[i]);
+
+
+ //    		if (object == i_object) {
+ //    			continue;
+ //    		}
+
+ //    		if (Object_intersect(intersection, light_ray, object) > -1) {
+ //    			goto SKIP_SHADING;
+ //    		}
+ //    	}
+
+ //    }
 
 
 
-    // }
+    // SKIP_SHADING:
+    // continue;
 }
 
 __device__ void Raytracer_findIntersectionPoint(float * intersection,
@@ -118,9 +146,9 @@ __device__ float Object_intersect (line_t * ray, object_t * object)
 {
     switch(object->type) {
         case SPHERE:
-            return Sphere_intersect(ray, object->sphere);
+            return Sphere_intersect(ray, &(object->sphere));
         case TRIANGLE:
-            return Triangle_intersect(ray, object->triangle);
+            return Triangle_intersect(ray, &(object->triangle));
     }
     return NAN;
 }
