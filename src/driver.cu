@@ -1,5 +1,6 @@
 
 #include <stdio.h>
+#include <time.h>
 
 #include "camera.h"
 #include "world.h"
@@ -21,9 +22,14 @@ world_t  *h_world;
 
 void do_work()
 {
+	clock_t tick = clock();
+	// Trace the next frame
 	Raytracer(d_frame, d_rays, h_world, h_camera->width * h_camera->height, BLOCKS, THREADS, MAX_REFLECTIONS);
-	// paint(f);
+	// Copy the raytraced frame back to the host
+	cudaMemcpy(canvas->pixels, d_frame, sizeof(color_t) * h_camera->width * h_camera->height, cudaMemcpyDeviceToHost);
 	// animate(w);
+	clock_t tock = clock();
+	sprintf(canvas->message, "FPS: %.2lf\n", 1.0 / ((double)(tock - tick) / CLOCKS_PER_SEC));
 }
 
 int main(int argc, char **argv)
@@ -68,7 +74,7 @@ int main(int argc, char **argv)
 	free(title);
 	printf("Created canvas\n");
 
-	Canvas_setRenderFunction(canvas, do_work, 1000);
+	Canvas_setRenderFunction(canvas, do_work, 1);
 	printf("Set canvas render function\n");
 
 	// Begin the main render loop

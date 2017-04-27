@@ -24,6 +24,7 @@ canvas_t* Canvas_create (int height, int width, char* window_name)
 	strcpy(result->window_name, window_name);
 	// Set default frame delay
 	result->delay = DEFAULT_REDRAW_DELAY;
+	result->message[0] = '\0';
 
 	return result;
 }
@@ -96,6 +97,15 @@ void can_display()
       }
    }
    glEnd();
+   // Display the message
+
+	glColor3ub(255, 255, 255);
+	// Set the location of the message
+	glRasterPos2i(5, global_canvas->height - 15);
+	// Draw the chracters
+	for (int character_iterator = 0; global_canvas->message[character_iterator] != '\0'; character_iterator++) {
+		glutBitmapCharacter(MESSAGE_FONT, global_canvas->message[character_iterator]);
+	}
 
    //display_messages();
    glutSwapBuffers();
