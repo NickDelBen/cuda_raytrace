@@ -90,48 +90,100 @@ __device__ void Raytracer_evaluateShadingModel (color_t * shading_model,
 	world_t  * d_w, object_t * i_object, material_t * material, line_t * ray,
 	float distance)
 {
-	// float ambient = d_w->global_ambient * material->i_ambient,
-	//  	  intersection[3];
+	float ambient = d_w->global_ambient * material->i_ambient,
+	 	  intersection[3], normal[3],
+	 	  diffuse, specular, shading;
 
- //    shading_model->r = material->color[0] * ambient;
- //    shading_model->b = material->color[1] * ambient;
- //    shading_model->g = material->color[2] * ambient;
+    shading_model->r = material->color[0] * ambient;
+    shading_model->b = material->color[1] * ambient;
+    shading_model->g = material->color[2] * ambient;
 
- //    //finds the intersection point
- //    Raytracer_findIntersectionPoint(intersection, ray, distance);
+    //finds the intersection point
+    Raytracer_findIntersectionPoint(intersection, ray, distance);
 
- //    line_t light_ray;
- //    light_t * lights = d_w->lights,
- //    		light;
- //    object_t * objects = d_w->objects,
- //    	     * object;
- //    for (int i = 0; i < d_w->n_lights; ++i) {
+    line_t light_ray, reflection_ray;
+    light_t * lights = d_w->lights,
+    		light;
+    object_t * objects = d_w->objects,
+    	     * object;
+    for (int i = 0; i < d_w->n_lights; ++i) {
 
- //    	light = lights[i];
+    	light = lights[i];
 
- //    	VECTOR_SUB(light_ray.direction, light.pos, intersection);
- //    	Vector_normalize(&light_ray);
+    	VECTOR_COPY(light_ray.position, intersection);
+    	VECTOR_SUB(light_ray.direction, light.pos, intersection);
+		VECTOR_SCALE(light_ray.direction, VECTOR_LENGTH(light_ray.direction));
 
- //    	for (int j = 0; j < d_w->n_objects; ++j) {
+    	for (int j = 0; j < d_w->n_objects; ++j) {
 
- //    		object = &(objects[i]);
-
-
- //    		if (object == i_object) {
- //    			continue;
- //    		}
-
- //    		if (Object_intersect(intersection, light_ray, object) > -1) {
- //    			goto SKIP_SHADING;
- //    		}
- //    	}
-
- //    }
+    		object = &(objects[i]);
 
 
+    		if (object == i_object) {
+    			continue;
+    		}
 
-    // SKIP_SHADING:
-    // continue;
+    		if (Object_intersect(&light_ray, object) > -1) {
+    			goto SKIP_SHADING;
+    		}
+    	}
+
+        //retrieves the normal at the point of intersection
+        Object_normal(normal, object, intersection);
+
+        VECTOR_COPY(reflection_ray.position, intersection);
+        Raytracer_findReflectedRay(reflection_ray.direction, ray->direction, normal);
+
+        //computes the shading
+        diffuse = Raytracer_diffuse(normal, light_ray.direction);
+        specular = Raytracer_specular(ray->direction, normal, light_ray.direction,
+        	material->specular_power);
+
+        // //computes reflection
+        // calculate_pixel_color(&reflection_color, raytracer,
+        //     &intersection, &reflection_ray, depth - 1);
+
+        shading = light.i * (material->i_diffuse * diffuse + 
+            material->i_specular * specular);
+
+        // color_t color;
+        // COLOR_COPY(color, light.color);
+        // COLOR_SCALE(color, shading);
+        // COLOR_ADD(shading_model, light.color);
+        shading_model->r += light.color[0] * shading;
+        shading_model->g += light.color[1] * shading;
+        shading_model->b += light.color[2] * shading;
+
+	    SKIP_SHADING:
+	    continue;
+    }
+}
+
+__device__ float Raytracer_diffuse(float * n, float * l)
+{
+    //max(0, light source vector . normal vector
+    float diffuse = VECTOR_DOT(l, n);
+    return fmax(0, diffuse);
+}
+
+__device__ float Raytracer_specular(float * ray, float * n,
+    float * l, float fallout)
+{
+    float v[3], r[3], r1[3], r2[3];
+
+    VECTOR_COPY(v, ray);
+    VECTOR_SCALE(v, -1);
+
+    // R = −L + 2(N.L)N
+    VECTOR_COPY(r1, l);
+    VECTOR_SCALE(r1, -1);
+    VECTOR_COPY(r2, n);
+    float temp = VECTOR_DOT(n, l);
+    VECTOR_SCALE(r1, 2 * temp);
+    VECTOR_ADD(r, r1, r2);
+
+    temp = VECTOR_DOT(v, r);
+    return pow(fmax(0, temp), fallout);
 }
 
 __device__ void Raytracer_findIntersectionPoint(float * intersection,
@@ -142,13 +194,28 @@ __device__ void Raytracer_findIntersectionPoint(float * intersection,
     VECTOR_ADD(intersection, intersection, ray->position);
 }
 
+__device__ void Raytracer_findReflectedRay(float * reflected, float * ray, float * normal)
+{
+    float c = 2 * VECTOR_DOT(ray, normal);
+
+    VECTOR_COPY(reflected, normal);
+    VECTOR_SCALE(reflected, c);
+    VECTOR_SUB(reflected, reflected, ray);
+	VECTOR_SCALE(reflected, VECTOR_LENGTH(reflected));
+}
+
 __device__ float Object_intersect (line_t * ray, object_t * object)
 {
     switch(object->type) {
-        case SPHERE:
+
+        case SPHERE: {
             return Sphere_intersect(ray, &(object->sphere));
-        case TRIANGLE:
+        }
+
+        case TRIANGLE: {
             return Triangle_intersect(ray, &(object->triangle));
+        }
+
     }
     return NAN;
 }
@@ -235,4 +302,28 @@ __device__ float Triangle_intersect (line_t * ray, triangle_t * triangle)
     }
 
     return d;
+}
+
+__device__ void Object_normal (float * normal, object_t * object,
+	float * intersection)
+{
+    switch(object->type) {
+
+        case SPHERE: {
+            Sphere_normal(normal, &(object->sphere), intersection);
+        } break;
+
+        case TRIANGLE: {
+            VECTOR_COPY(normal, object->triangle.normal);
+        } break;
+
+    }
+}
+
+__device__ void Sphere_normal (float * normal, sphere_t * sphere,
+	float * intersection)
+{
+	VECTOR_COPY(normal, intersection);
+	VECTOR_SUB(normal, normal, sphere->center);
+	VECTOR_SCALE(normal, VECTOR_LENGTH(normal));
 }
