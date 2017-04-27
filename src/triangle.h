@@ -6,7 +6,11 @@
 
 #include <stdio.h>
 
+#include "line.h"
 #include "vector3.h"
+#include "helpers.h"
+
+#define EPSILON 0.00001
 
 // Defines a triangle
 typedef struct triangle_t {
@@ -20,5 +24,12 @@ typedef struct triangle_t {
 * @param triangle triangle to store read data in
 ******************************/
 void Triangle_readTo (FILE* file, triangle_t* triangle);
+
+/******************************
+* Finds the intersection between an triangle and a ray.
+* @param ray      A pointer to a line_t object that has the ray equation.
+* @param triangle A pointer to the triangle that will be tested for intersection.
+******************************/
+__device__ float Triangle_intersect (line_t * ray, triangle_t * triangle);
 
 #endif

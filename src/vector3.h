@@ -79,6 +79,6 @@
 * Normalizes a vector
 * @param vec Vector to normalize
 ******************************/
-void Vector_normalize (float* vec);
+__host__ __device__ void Vector_normalize (float* vec);
 
 #endif

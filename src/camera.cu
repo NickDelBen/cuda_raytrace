@@ -100,7 +100,7 @@ void Camera_calculateVectors (camera_t* cam)
 	Vector_normalize(cam->comp_vert);
 	Vector_normalize(cam->comp_horiz);
 	// Find the normal
-	VECTOR_CROSSPRODUCT(cam->normal, cam->comp_vert, cam->comp_horiz);
+	VECTOR_CROSSPRODUCT(cam->normal, cam->comp_horiz, cam->comp_vert);
 }
 
 // Frees resources allocated for a camera on the host
