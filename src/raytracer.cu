@@ -14,6 +14,7 @@ void Raytracer(color_t * d_f, line_t * d_r, world_t * w, int size,
 
 	// Initialize frame
 	Frame_init<<<blocks, threads, f_size>>>(d_f, size);
+	cudaDeviceSynchronize();
 
 	line_t * rays;
 	cudaMalloc(&rays, sizeof(line_t) * size);
@@ -21,7 +22,6 @@ void Raytracer(color_t * d_f, line_t * d_r, world_t * w, int size,
 
 	// Traces rays bounces.
 	for (int i = 0; i < max_reflections; ++i) {
-		printf("Working\n");
 		Raytracer_trace<<<blocks, threads, r_size + f_size>>>(rays, d_f, d_w,
 			size, b_work, t_work);
 		cudaDeviceSynchronize();
@@ -39,8 +39,6 @@ __global__ void Raytracer_trace (line_t * d_r, color_t * d_f, world_t * d_w,
 		offset 		= b_offset + t_offset;
 
 	extern __shared__ float smem[];
-
-	printf("Distance check\n");
 
 	// Assign shared memory locations to the rays and frame arrays.
 	line_t 	* rays 	= (line_t*)smem;
@@ -60,9 +58,6 @@ __global__ void Raytracer_trace (line_t * d_r, color_t * d_f, world_t * d_w,
 	// Copy the results of the trace on the frame tile to the global memory.
 	memcpy(&d_r[offset], &rays[t_offset], sizeof(line_t) * t_work);
 	memcpy(&d_f[offset], &frame[t_offset], sizeof(color_t) * t_work);
-
-
-	__syncthreads();
 }
 
 __device__ void Raytracer_calculatePixelColor (color_t * color, world_t  * d_w,
@@ -90,16 +85,17 @@ __device__ void Raytracer_calculatePixelColor (color_t * color, world_t  * d_w,
     }
 
     if (distance != -1) {
-    	printf("Intersection at dist: %f\n", distance);
+    	printf("Distance not -1: %f\n", distance);	
     }
-    if (object != NULL) {
-    	Raytracer_evaluateShadingModel(&shading_model, d_w, object, ray,
-    		distance);
 
-        color->r = min(shading_model.r, 255);
-        color->b = min(shading_model.b, 255);
-        color->g = min(shading_model.g, 255);
-    }
+    // if (object != NULL) {
+    // 	Raytracer_evaluateShadingModel(&shading_model, d_w, object, ray,
+    // 		distance);
+
+    //     color->r = min(shading_model.r, 255);
+    //     color->b = min(shading_model.b, 255);
+    //     color->g = min(shading_model.g, 255);
+    // }
 }
 
 __device__ void Raytracer_evaluateShadingModel (color_t * shading_model,

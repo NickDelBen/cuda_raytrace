@@ -3,7 +3,7 @@
 project=raytracer
 
 # Compiler to use
-cc=nvcc
+cc=nvcc 
 # Location to store object files
 DO=obj
 # Directory for main binaries
@@ -14,7 +14,7 @@ DS=src
 DD=doc
 
 # NVIDIA COMPILER FLAGS
-FNV=-Wno-deprecated-gpu-targets
+FNV=-Wno-deprecated-gpu-targets 
 #FNV=-c -O2 --compiler-bindir /usr/bin
 # Compiler flags to use for debugging
 FD=$(FNV) -Wall -g 

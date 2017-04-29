@@ -4,6 +4,8 @@
 #ifndef _h_frame
 #define _h_frame
 
+#include <stdio.h>
+
 #include "color.h"
 
 /******************************
