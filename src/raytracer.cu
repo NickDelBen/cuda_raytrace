@@ -24,7 +24,6 @@ void Raytracer(color_t * d_f, line_t * d_r, world_t * w, int size,
 	for (int i = 0; i < max_reflections; ++i) {
 		Raytracer_trace<<<blocks, threads, r_size + f_size>>>(rays, d_f, d_w,
 			size, b_work, t_work);
-		cudaDeviceSynchronize();
 	}
 
 	// Frees world from device memory.
@@ -71,22 +70,23 @@ __device__ void Raytracer_calculatePixelColor (color_t * color, world_t  * d_w,
     color->b = bg.b;
     color->g = bg.g;
 
-    float distance = -1, temp;
+    float distance = NAN, temp;
     object_t * object = NULL;
 
     object_t * objects = d_w->objects;
     for (int i = 0; i < d_w->n_objects; ++i) {
     	temp = Object_intersect(ray, &(objects[i]));
 
-    	if (!isnan(temp) && (distance == -1 || temp < distance)) {
+    	if (!isnan(temp) && (isnan(distance) || temp < distance)) {
     		distance = temp;
     		object = &(objects[i]);
     	}
     }
 
-    if (distance != -1) {
-    	printf("Distance not -1: %f\n", distance);	
-    }
+    if (object != NULL) {
+    	printf("%f\n", distance);
+    	Raytracer_evaluateShadingModel(&shading_model, d_w, object, ray,
+    		distance);
 
     // if (object != NULL) {
     // 	Raytracer_evaluateShadingModel(&shading_model, d_w, object, ray,
@@ -111,7 +111,9 @@ __device__ void Raytracer_evaluateShadingModel (color_t * shading_model,
     shading_model->g = material.color[2] * ambient;
 
     //finds the intersection point
-    Raytracer_findIntersectionPoint(intersection, ray, distance);
+    findIntersectionPoint(intersection, ray, distance);
+
+    Vector_normalize(intersection);
 
     line_t light_ray, reflection_ray;
     light_t * lights = d_w->lights,
@@ -124,7 +126,7 @@ __device__ void Raytracer_evaluateShadingModel (color_t * shading_model,
 
     	VECTOR_COPY(light_ray.position, intersection);
     	VECTOR_SUB(light_ray.direction, light.pos, intersection);
-		VECTOR_SCALE(light_ray.direction, VECTOR_LENGTH(light_ray.direction));
+		VECTOR_SCALE(light_ray.direction, 1.0 / VECTOR_LENGTH(light_ray.direction));
 
     	for (int j = 0; j < d_w->n_objects; ++j) {
 
@@ -144,7 +146,7 @@ __device__ void Raytracer_evaluateShadingModel (color_t * shading_model,
         Object_normal(normal, object, intersection);
 
         VECTOR_COPY(reflection_ray.position, intersection);
-        Raytracer_findReflectedRay(reflection_ray.direction, ray->direction, normal);
+        findReflectedRay(reflection_ray.direction, ray->direction, normal);
 
         //computes the shading
         diffuse = Raytracer_diffuse(normal, light_ray.direction);
@@ -196,146 +198,4 @@ __device__ float Raytracer_specular(float * ray, float * n,
 
     temp = VECTOR_DOT(v, r);
     return pow(fmax(0, temp), fallout);
-}
-
-__device__ void Raytracer_findIntersectionPoint(float * intersection,
-	line_t * ray, float distance)
-{
-	VECTOR_COPY(intersection, ray->direction);
-    VECTOR_SCALE(intersection, distance);
-    VECTOR_ADD(intersection, intersection, ray->position);
-}
-
-__device__ void Raytracer_findReflectedRay(float * reflected, float * ray, float * normal)
-{
-    float c = 2 * VECTOR_DOT(ray, normal);
-
-    VECTOR_COPY(reflected, normal);
-    VECTOR_SCALE(reflected, c);
-    VECTOR_SUB(reflected, reflected, ray);
-	VECTOR_SCALE(reflected, VECTOR_LENGTH(reflected));
-}
-
-__device__ float Object_intersect (line_t * ray, object_t * object)
-{
-    switch(object->type) {
-
-        case SPHERE: {
-            return Sphere_intersect(ray, &(object->sphere));
-        }
-
-        case TRIANGLE: {
-            return Triangle_intersect(ray, &(object->triangle));
-        }
-
-    }
-    return NAN;
-}
-
-__device__ float Sphere_intersect (line_t * ray, sphere_t * sphere)
-{
-    float * center = sphere->center,
-    	  radius = sphere->radius,
-    	  temp[3], b, c, d, sqrtd;
-
-    //temp = ray origin - center
-    VECTOR_SUB(temp, ray->position, center);
-
-    //b = 2 * ray direction . (ray origin - sphere center)
-    b = 2 * VECTOR_DOT(ray->direction, temp);
-
-    //c = (ray origin - sphere center) . (ray origin - sphere center)
-    // - radius^2
-    c = VECTOR_DOT(temp, temp) - pow(radius, 2);
-
-    //d = b^2 - 4 * a * c, a = 1
-    d = pow(b, 2) - 4 * c;
-
-    if (d < 0) {
-        return NAN;
-    } else if (d == 0) {
-        return -b / 2;
-    } else {
-        sqrtd = sqrt(d);
-        return fmin(
-            (-b + sqrtd) / 2,
-            (-b - sqrtd) / 2
-        );
-    }
-}
-
-__device__ float Triangle_intersect (line_t * ray, triangle_t * triangle)
-{
-    float * direction = ray->direction,
-    	  * normal = triangle->normal,
-    	  * p0 = triangle->points[0],
-    	  intersection[3], u[3], v[3], w[3], temp[3],
-          d, numerator, denominator, uu, uv, uw, vv, vw, s, t;
-
-    //denominator = n . direction
-    denominator = VECTOR_DOT(normal, direction);
-
-    if (fabs(denominator) < EPSILON) {
-        return NAN;
-    }
-
-    //numerator = n . (p0 - origin)
-    VECTOR_SUB(temp, p0, ray->position);
-    numerator = VECTOR_DOT(normal, temp);
-
-    d = numerator / denominator;
-
-    if (d < 0) {
-        return NAN;
-    }
-
-    Raytracer_findIntersectionPoint(intersection, ray, d);
-
-    VECTOR_SUB(u, triangle->points[1], p0);
-    VECTOR_SUB(v, triangle->points[2], p0);
-    VECTOR_SUB(w, intersection, p0);
-
-    uu = VECTOR_DOT(u, u);
-    uv = VECTOR_DOT(u, v);
-    uw = VECTOR_DOT(u, w);
-    vv = VECTOR_DOT(v, v);
-    vw = VECTOR_DOT(v, w);
-
-    denominator = uv * uv - uu * vv;
-
-    s = (uv * vw - vv * uw) / denominator;
-    if (s < 0.0 || s > 1.0) {
-        return NAN;
-    }
-
-    t = (uv * uw - uu * vw) / denominator;
-    if (t < 0.0 || s + t > 1.0) {
-        return NAN;
-    }
-
-    return d;
-}
-
-__device__ void Object_normal (float * normal, object_t * object,
-	float * intersection)
-{
-    switch(object->type) {
-
-        case SPHERE: {
-            Sphere_normal(normal, &(object->sphere), intersection);
-        } break;
-
-        case TRIANGLE: {
-            VECTOR_COPY(normal, object->triangle.normal);
-        } break;
-
-    }
-}
-
-__device__ void Sphere_normal (float * normal, sphere_t * sphere,
-	float * intersection)
-{
-	VECTOR_COPY(normal, intersection);
-	VECTOR_SUB(normal, normal, sphere->center);
-	VECTOR_SCALE(normal, VECTOR_LENGTH(normal));
 }

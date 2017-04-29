@@ -19,9 +19,11 @@ FNV=-Wno-deprecated-gpu-targets
 # Compiler flags to use for debugging
 FD=$(FNV) -Wall -g 
 # Compiler flags to use for object files
-FO=$(FNV) -c 
+FO=$(FNV) -c
 # Compiler Flags to use for binaries
-FB=$(FNV) -lGL -lGLU -lglut
+FB=$(FNV) -lGL -lGLU -lglut -lcudadevrt
+# Link CUDA object files
+LC=-dc
 
 ################################################
 # Build Commands
@@ -66,9 +68,9 @@ tarball:
 ################################################
 
 #Build project executable
-$(project): prep driver.o light.o object.o material.o sphere.o triangle.o world.o vector3.o camera.o raytracer.o frame.o canvas.o
+$(project): prep driver.o light.o object.o material.o sphere.o triangle.o world.o vector3.o camera.o raytracer.o frame.o canvas.o helpers.o
 	# Building and linking the project binary
-	$(cc) -o $(DB)/$@ $(DO)/driver.o $(DO)/light.o $(DO)/object.o $(DO)/material.o $(DO)/sphere.o $(DO)/triangle.o $(DO)/world.o $(DO)/vector3.o $(DO)/camera.o $(DO)/raytracer.o $(DO)/frame.o $(DO)/canvas.o $(FB)
+	$(cc) -rdc=true -o $(DB)/$@ $(DO)/driver.o $(DO)/light.o $(DO)/object.o $(DO)/material.o $(DO)/sphere.o $(DO)/triangle.o $(DO)/world.o $(DO)/vector3.o $(DO)/camera.o $(DO)/raytracer.o $(DO)/frame.o $(DO)/canvas.o $(DO)/helpers.o $(FB)
 
 ################################################
 # Object Files
@@ -84,7 +86,7 @@ light.o: $(DS)/light.cu
 
 object.o: $(DS)/object.cu
 	# Compiling object object
-	$(cc) $(FO) -o $(DO)/$@ $^
+	$(cc) $(FO) $(LC) -o $(DO)/$@ $^
 
 material.o: $(DS)/material.cu
 	# Compiling material object
@@ -92,11 +94,11 @@ material.o: $(DS)/material.cu
 
 sphere.o: $(DS)/sphere.cu
 	# Compiling sphere object
-	$(cc) $(FO) -o $(DO)/$@ $^
+	$(cc) $(FO) $(LC) -o $(DO)/$@ $^
 
 triangle.o: $(DS)/triangle.cu
 	# Compiling triangle object
-	$(cc) $(FO) -o $(DO)/$@ $^
+	$(cc) $(FO) $(LC) -o $(DO)/$@ $^
 
 world.o: $(DS)/world.cu
 	# Compiling world object
@@ -104,7 +106,7 @@ world.o: $(DS)/world.cu
 
 vector3.o: $(DS)/vector3.cu
 	# Compiling vector object
-	$(cc) $(FO) -o $(DO)/$@ $^
+	$(cc) $(FO) $(LC) -o $(DO)/$@ $^
 
 camera.o: $(DS)/camera.cu
 	# Compiling camera object
@@ -112,7 +114,7 @@ camera.o: $(DS)/camera.cu
 
 raytracer.o: $(DS)/raytracer.cu
 	# Compiling raytracer object
-	$(cc) $(FO) -o $(DO)/$@ $^
+	$(cc) $(FO) $(LC) -o $(DO)/$@ $^
 
 frame.o: $(DS)/frame.cu
 	# Compiling frame object
@@ -121,4 +123,8 @@ frame.o: $(DS)/frame.cu
 canvas.o: $(DS)/canvas.cu
 	# Compiling canvas object
 	$(cc) $(FO) -o $(DO)/$@ $^
+
+helpers.o: $(DS)/helpers.cu
+	# Compiling helpers object
+	$(cc) $(FO) $(LC) -o $(DO)/$@ $^
 
