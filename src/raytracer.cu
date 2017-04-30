@@ -1,7 +1,7 @@
 
 #include "raytracer.h"
 
-__host__ __device__ void CudaCheckError()
+__host__ void CudaCheckError()
 {
     cudaError_t err = cudaGetLastError();
 
