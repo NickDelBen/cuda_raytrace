@@ -3,7 +3,7 @@
 project=raytracer
 
 # Compiler to use
-cc=nvcc -arch=sm_35
+cc=nvcc -arch=sm_20
 # Location to store object files
 DO=obj
 # Directory for main binaries
@@ -14,7 +14,7 @@ DS=src
 DD=doc
 
 # NVIDIA COMPILER FLAGS
-FNV=-Wno-deprecated-gpu-targets
+FNV=-Wno-deprecated-gpu-targets 
 #FNV=-c -O2 --compiler-bindir /usr/bin
 # Compiler flags to use for debugging
 FD=$(FNV) -Wall -g 
@@ -68,9 +68,9 @@ tarball:
 ################################################
 
 #Build project executable
-$(project): prep driver.o light.o object.o material.o sphere.o triangle.o world.o vector3.o camera.o raytracer.o frame.o canvas.o helpers.o
+$(project): prep driver.o light.o object.o material.o sphere.o triangle.o world.o vector3.o camera.o raytracer.o canvas.o helpers.o
 	# Building and linking the project binary
-	$(cc) -rdc=true -o $(DB)/$@ $(DO)/driver.o $(DO)/light.o $(DO)/object.o $(DO)/material.o $(DO)/sphere.o $(DO)/triangle.o $(DO)/world.o $(DO)/vector3.o $(DO)/camera.o $(DO)/raytracer.o $(DO)/frame.o $(DO)/canvas.o $(DO)/helpers.o $(FB)
+	$(cc) -rdc=true -o $(DB)/$@ $(DO)/driver.o $(DO)/light.o $(DO)/object.o $(DO)/material.o $(DO)/sphere.o $(DO)/triangle.o $(DO)/world.o $(DO)/vector3.o $(DO)/camera.o $(DO)/raytracer.o $(DO)/canvas.o $(DO)/helpers.o $(FB)
 
 ################################################
 # Object Files
@@ -115,10 +115,6 @@ camera.o: $(DS)/camera.cu
 raytracer.o: $(DS)/raytracer.cu
 	# Compiling raytracer object
 	$(cc) $(FO) $(LC) -o $(DO)/$@ $^
-
-frame.o: $(DS)/frame.cu
-	# Compiling frame object
-	$(cc) $(FO) -o $(DO)/$@ $^
 
 canvas.o: $(DS)/canvas.cu
 	# Compiling canvas object

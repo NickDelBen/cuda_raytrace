@@ -11,11 +11,14 @@
 #include "helpers.h"
 
 #define EPSILON 0.00001
+#define U 0
+#define V 1
+#define W 2
 
 // Defines a triangle
 typedef struct triangle_t {
-	float points[3][3];
-	float normal[3];
+	float points[3][DSPACE];
+	float normal[DSPACE];
 } triangle_t;
 
 /******************************
@@ -23,7 +26,7 @@ typedef struct triangle_t {
 * @param file   File to read triangle from
 * @param triangle triangle to store read data in
 ******************************/
-void Triangle_readTo (FILE* file, triangle_t* triangle);
+void Triangle_readTo (FILE * file, triangle_t * triangle);
 
 /******************************
 * Finds the intersection between an triangle and a ray.

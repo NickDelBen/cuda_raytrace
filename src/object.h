@@ -25,7 +25,7 @@ typedef struct {
 * @param file   File to read object from
 * @param object Object to store read data in
 ******************************/
-void Object_readTo (FILE* file, object_t* object);
+void Object_readTo (FILE * file, object_t * object);
 
 /******************************
 * Finds the intersection between an object and a ray.

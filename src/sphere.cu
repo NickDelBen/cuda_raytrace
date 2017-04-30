@@ -2,10 +2,11 @@
 #include "sphere.h"
 
 // Reads sphere data from the specified file and sets specified sphere
-void Sphere_readTo (FILE* file, sphere_t* sphere)
+void Sphere_readTo (FILE * file, sphere_t * sphere)
 {
-	fscanf(file, "%f %f %f %f\n",
-		&(sphere->center[0]), &(sphere->center[1]), &(sphere->center[2]),
+	fscanf(file, "CENTER (%f, %f, %f), "
+        "RADIUS %f\n",
+		&(sphere->center[X]), &(sphere->center[Y]), &(sphere->center[Z]),
 		&(sphere->radius));
 }
 
@@ -14,7 +15,7 @@ __device__ float Sphere_intersect (line_t * ray, sphere_t * sphere)
 {
     float * center = sphere->center,
     	  radius = sphere->radius,
-    	  temp[3], b, c, d, sqrtd;
+    	  temp[DSPACE], b, c, d, sqrtd;
 
     //temp = ray origin - center
     VECTOR_SUB(temp, ray->position, center);
@@ -46,7 +47,6 @@ __device__ float Sphere_intersect (line_t * ray, sphere_t * sphere)
 __device__ void Sphere_normal (float * normal, sphere_t * sphere,
     float * intersection)
 {
-    VECTOR_COPY(normal, intersection);
-    VECTOR_SUB(normal, normal, sphere->center);
-    VECTOR_SCALE(normal, 1.0 / VECTOR_LENGTH(normal));
+    VECTOR_SUB(normal, intersection, sphere->center);
+    Vector_normalize(normal);
 }

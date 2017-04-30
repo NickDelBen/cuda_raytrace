@@ -11,8 +11,8 @@
 
 // Defines a sphere
 typedef struct sphere_t {
-	float center[3]; 	// Position of the object
-	float radius;   	// Radius of the sphere
+	float center[DSPACE]; // Position of the object
+	float radius;   	  // Radius of the sphere
 } sphere_t;
 
 /******************************
@@ -20,7 +20,7 @@ typedef struct sphere_t {
 * @param file   File to read sphere from
 * @param sphere Sphere to store read data in
 ******************************/
-void Sphere_readTo (FILE* file, sphere_t* sphere);
+void Sphere_readTo (FILE * file, sphere_t * sphere);
 
 /******************************
 * Finds the intersection between an sphere and a ray.

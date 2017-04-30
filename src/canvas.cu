@@ -1,7 +1,7 @@
 
 #include "canvas.h"
 
-canvas_t* global_canvas;
+canvas_t * global_canvas;
 // Reshape the window event handler
 void can_reshape(int w, int h);
 // Preform the actual display
@@ -10,12 +10,12 @@ void can_display();
 void timer_callback(int t);
 
 // Creates a new canvas
-canvas_t* Canvas_create (int height, int width, char* window_name)
+canvas_t * Canvas_create (int height, int width, char * window_name)
 {
 	// Allocate resources for canvas
-	canvas_t* result = (canvas_t*) malloc(sizeof(canvas_t));
+	canvas_t * result = (canvas_t *) malloc(sizeof(canvas_t));
 	// Allocate memory for pixels
-	result->pixels = (color_t*) malloc(sizeof(color_t) * height * width);
+	result->pixels = (COLOR *) malloc(sizeof(COLOR) * CHANNELS * height * width);
 
 	// Store given data for canvas
 	result->width = width;
@@ -32,16 +32,16 @@ canvas_t* Canvas_create (int height, int width, char* window_name)
 // Sets the pixel at the current location to the specified value
 void Canvas_setPixel(int x, int y, int r, int g, int b)
 {
-   color_t* t;
+   COLOR * t;
 
    t = &(global_canvas->pixels[y * global_canvas->width + x]);
-   t->r = r;
-   t->g = g;
-   t->b = b;
+   t[R] = r;
+   t[G] = g;
+   t[B] = b;
 }
 
 // Set the loop function for the canvas.
-void Canvas_setRenderFunction (canvas_t* can, void (func)(), unsigned int time)
+void Canvas_setRenderFunction (canvas_t * can, void (func)(), unsigned int time)
 {
 	// Save the redraw animate functionm
 	can->animate = func;
@@ -50,7 +50,7 @@ void Canvas_setRenderFunction (canvas_t* can, void (func)(), unsigned int time)
 }
 
 // Runs the render loop of the specified canvas
-void Canvas_startLoop (canvas_t* can, int argc, char** argv)
+void Canvas_startLoop (canvas_t * can, int argc, char ** argv)
 {
 	global_canvas = can;
 	glutInit(&argc, argv);
@@ -65,7 +65,7 @@ void Canvas_startLoop (canvas_t* can, int argc, char** argv)
 }
 
 // Frees resources allocated for a canvas
-void Canvas_free (canvas_t* target)
+void Canvas_free (canvas_t * target)
 {
 	// Free memory allocated for pixels
 	free(target->pixels);
@@ -85,14 +85,14 @@ void timer_callback(int t)
 void can_display()
 {
    int x_itr, y_itr;
-   color_t* curr;
+   COLOR * curr;
 
    // Redraw the pixels
    glBegin(GL_POINTS);
    curr = global_canvas->pixels;
    for (y_itr = 0; y_itr < global_canvas->height; y_itr++) {
       for (x_itr = 0; x_itr < global_canvas->width; x_itr++, curr++) {
-         glColor3ub(curr->r, curr->g, curr->b);
+         glColor3ub(curr[R], curr[G], curr[B]);
          glVertex2f(x_itr, y_itr);
       }
    }

@@ -15,14 +15,14 @@
 
 // Defines a world
 typedef struct world_t {
-	color_t bg; 			  // Color of world background
+	COLOR bg[CHANNELS];       // Color of world background
 	float global_ambient;     // Global ambient light
 	unsigned int n_lights;    // Number of lights in the world
 	unsigned int n_materials; // Number of materials in the world
 	unsigned int n_objects;   // Number of spheres in the world
-	light_t* lights;          // Lights in the world
-	material_t* materials;    // Material details in the world
-	object_t* objects;        // Objects in the world
+	light_t * lights;         // Lights in the world
+	material_t * materials;   // Material details in the world
+	object_t * objects;       // Objects in the world
 } world_t;
 
 /******************************
@@ -31,7 +31,7 @@ typedef struct world_t {
 * @param file File to read world from
 * @return pointer to location of new world on host
 ******************************/
-world_t* World_read (FILE* file);
+world_t * World_read (FILE * file);
 
 /******************************
 * Copies the specified world to the device
@@ -39,18 +39,18 @@ world_t* World_read (FILE* file);
 * @param source World to copy to device
 * @return pointer to location of new world on device
 ******************************/
-world_t* World_toDevice (world_t* source);
+world_t * World_toDevice (world_t * source);
 
 /******************************
 * Frees resources allocated for a world on the host
 * @param world Pointer to location on host of world to free
 ******************************/
-void World_freeHost (world_t* world);
+void World_freeHost (world_t * world);
 
 /******************************
 * Frees resources allocated for a world on the device
 * @param world Pointer to location on device of World to free
 ******************************/
-void World_freeDevice (world_t* world);
+void World_freeDevice (world_t * world);
 
 #endif

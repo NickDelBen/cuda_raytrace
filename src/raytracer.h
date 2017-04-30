@@ -5,8 +5,8 @@
 #define _h_raytracer
 
 #include "world.h"
-#include "frame.h"
 #include "line.h"
+#include "vector3.h"
 #include "helpers.h"
 
 /******************************
@@ -20,7 +20,7 @@
 * @param threads         The number of kernel threads.
 * @param max_reflections The number of possible bounces for a light ray.
 ******************************/
-void Raytracer(color_t *d_f, line_t *d_r, world_t *w, int size,
+void Raytracer(COLOR * d_f, line_t * d_r, world_t * w, int size,
 	int blocks, int threads, int max_reflections);
 
 /******************************
@@ -32,7 +32,7 @@ void Raytracer(color_t *d_f, line_t *d_r, world_t *w, int size,
 * @param b_work The amount of work each block will do.
 * @param t_work The amount of work each thread will do.
 ******************************/
-__global__ void Raytracer_trace (line_t * d_r, color_t * d_f, world_t * d_w,
+__global__ void Raytracer_trace (line_t * d_r, COLOR * d_f, world_t * d_w,
 	int size, int b_work, int t_work);
 
 /******************************
@@ -41,8 +41,8 @@ __global__ void Raytracer_trace (line_t * d_r, color_t * d_f, world_t * d_w,
 * @param w     A pointer to the world object.
 * @param ray   A pointer to a line_t object that has the ray equation.
 ******************************/
-__device__ void Raytracer_calculatePixelColor (color_t *color, world_t *d_w,
-	line_t *ray);
+__device__ void Raytracer_calculatePixelColor (COLOR * color, world_t * d_w,
+	line_t * ray);
 
 /******************************
 * Calculates the shading model of each pixel.
@@ -52,7 +52,7 @@ __device__ void Raytracer_calculatePixelColor (color_t *color, world_t *d_w,
 * @param ray           A pointer to a line_t object that has the ray equation.
 * @param distance      The distance between the camera and object.
 ******************************/
-__device__ void Raytracer_evaluateShadingModel (color_t * shading_model,
+__device__ void Raytracer_evaluateShadingModel (COLOR * shading_model,
 	world_t  * d_w, object_t * i_object, line_t * ray, float distance);
 
 /******************************
