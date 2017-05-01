@@ -9,6 +9,8 @@
 #include "vector3.h"
 #include "helpers.h"
 
+#define CUDA_DEVICE 0
+
 /******************************
 * Lunches the tracer kernel.
 * @param d_f             Frame memory location for storing the frame on the
@@ -28,12 +30,12 @@ void Raytracer(COLOR * d_f, line_t * d_r, world_t * w, int size,
 * @param d_r    A pointer to the camera rays on the device.
 * @param d_f    Frame memory location for storing the frame on the device.
 * @param w      A pointer to the world object.
-* @param size   The size of the portview panel.
+* @param w_size The size of the world.
 * @param b_work The amount of work each block will do.
 * @param t_work The amount of work each thread will do.
 ******************************/
-__global__ void Raytracer_trace (line_t * d_r, COLOR * d_f, world_t * d_w,
-	int size, int b_work, int t_work);
+__global__ void Raytracer_trace (line_t * d_r, COLOR * d_f, world_t * w,
+	int w_size, int b_work, int t_work);
 
 /******************************
 * Calculates the color of each pixel.

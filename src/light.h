@@ -6,12 +6,13 @@
 
 #include <stdio.h>
 
-#include "vector3.h"
+#include "point.h"
 #include "color.h"
+#include "vector3.h"
 
 // Defines a light
 typedef struct light_t {
-	float pos[DSPACE];     // Position of the light
+	POINT pos[DSPACE];     // Position of the light
 	COLOR color[CHANNELS]; // Color of the light
 	float i;               // Intensity of the light
 } light_t;

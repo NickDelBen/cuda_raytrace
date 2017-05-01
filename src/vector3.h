@@ -38,10 +38,8 @@
 * @param u First vector
 * @param v Seconf vector
 ******************************/
-#define VECTOR_DOT(u, v) \
-	((u)[X]*(v)[X]) +    \
-	((u)[Y]*(v)[Y]) +    \
-	((u)[Z]*(v)[Z]);
+#define VECTOR_DOT(u, v)    \
+		(((u)[X] * (v)[X]) + ((u)[Y] * (v)[Y]) + ((u)[Z] * (v)[Z]))
 
 /******************************
 * Stores the cross product of two vectors in a third vector
@@ -49,10 +47,10 @@
 * @param u First vector
 * @param v Seconf vector
 ******************************/
-#define VECTOR_CROSSPRODUCT(w, u, v)            \
-	(w)[X] = ((u)[Y]*(v)[Z]) - ((u)[Z]*(v)[Y]); \
-	(w)[Y] = ((u)[Z]*(v)[X]) - ((u)[X]*(v)[Z]); \
-	(w)[Z] = ((u)[X]*(v)[Y]) - ((u)[Y]*(v)[X]);
+#define VECTOR_CROSSPRODUCT(w, u, v)                \
+	(w)[X] = ((u)[Y] * (v)[Z]) - ((u)[Z] * (v)[Y]); \
+	(w)[Y] = ((u)[Z] * (v)[X]) - ((u)[X] * (v)[Z]); \
+	(w)[Z] = ((u)[X] * (v)[Y]) - ((u)[Y] * (v)[X]);
 
 /******************************
 * Calculates the length of the vector

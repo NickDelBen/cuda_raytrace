@@ -37,9 +37,18 @@ world_t * World_read (FILE * file);
 * Copies the specified world to the device
 * NOTE: Must free result with World_freeDevice()
 * @param source World to copy to device
+* @param size   A point to the integer that will be populated by the world size
 * @return pointer to location of new world on device
 ******************************/
-world_t * World_toDevice (world_t * source);
+world_t * World_toDevice (world_t * source, int * size);
+
+/******************************
+* Copies the specified world to the device's shared memory
+* @param smem   The shared memory location
+* @param source World to copy to device's shared memory
+* @return pointer to location of next available location in the shared memory
+******************************/
+__device__ world_t * World_toShared (void * smem, world_t * source);
 
 /******************************
 * Frees resources allocated for a world on the host

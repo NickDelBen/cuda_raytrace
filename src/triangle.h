@@ -23,16 +23,16 @@ typedef struct triangle_t {
 
 /******************************
 * Reads triangle data from the specified file and sets specified triangle
-* @param file   File to read triangle from
-* @param triangle triangle to store read data in
+* @param file File to read triangle from
+* @param t    triangle to store read data in
 ******************************/
-void Triangle_readTo (FILE * file, triangle_t * triangle);
+void Triangle_readTo (FILE * file, triangle_t * t);
 
 /******************************
 * Finds the intersection between an triangle and a ray.
-* @param ray      A pointer to a line_t object that has the ray equation.
-* @param triangle A pointer to the triangle that will be tested for intersection.
+* @param ray A pointer to a line_t object that has the ray equation.
+* @param t   A pointer to the triangle that will be tested for intersection.
 ******************************/
-__device__ float Triangle_intersect (line_t * ray, triangle_t * triangle);
+__device__ float Triangle_intersect (line_t * ray, triangle_t * t);
 
 #endif

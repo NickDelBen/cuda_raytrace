@@ -102,7 +102,7 @@ triangle.o: $(DS)/triangle.cu
 
 world.o: $(DS)/world.cu
 	# Compiling world object
-	$(cc) $(FO) -o $(DO)/$@ $^
+	$(cc) $(FO) $(LC) -o $(DO)/$@ $^
 
 vector3.o: $(DS)/vector3.cu
 	# Compiling vector object

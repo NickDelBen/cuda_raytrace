@@ -6,7 +6,8 @@ camera_t * Camera_read (FILE * file)
 {
 	camera_t * result = (camera_t *) malloc(sizeof(camera_t));
 
-	fscanf(file, "CAM POINTS (%f, %f, %f), "
+	fscanf(file, "CAM POINTS "
+		"(%f, %f, %f), "
 		"(%f, %f, %f), "
 		"(%f, %f, %f), "
 		"(%f, %f, %f)\n",

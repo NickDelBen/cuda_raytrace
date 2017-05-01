@@ -2,28 +2,31 @@
 #include "triangle.h"
 
 // Reads triangle data from the specified file and sets specified triangle
-void Triangle_readTo (FILE * file, triangle_t * triangle)
+void Triangle_readTo (FILE * file, triangle_t * t)
 {
-	fscanf(file, "POINTS (%f, %f, %f), (%f, %f, %f), (%f, %f, %f)\n",
-		&(triangle->points[U][X]), &(triangle->points[U][Y]), &(triangle->points[U][Z]),
-		&(triangle->points[V][X]), &(triangle->points[V][Y]), &(triangle->points[V][Z]),
-		&(triangle->points[W][X]), &(triangle->points[W][Y]), &(triangle->points[W][Z]));
+	fscanf(file, "POINTS "
+        "(%f, %f, %f), "
+        "(%f, %f, %f), "
+        "(%f, %f, %f)\n",
+		&(t->points[U][X]), &(t->points[U][Y]), &(t->points[U][Z]),
+		&(t->points[V][X]), &(t->points[V][Y]), &(t->points[V][Z]),
+		&(t->points[W][X]), &(t->points[W][Y]), &(t->points[W][Z]));
 
 	float temp1[DSPACE], temp2[DSPACE];
-	VECTOR_SUB(temp1, triangle->points[V], triangle->points[U]);
-    VECTOR_SUB(temp2, triangle->points[W], triangle->points[U]);
-    VECTOR_CROSSPRODUCT(triangle->normal, temp1, temp2);
-    Vector_normalize(triangle->normal);
+	VECTOR_SUB(temp1, t->points[V], t->points[U]);
+    VECTOR_SUB(temp2, t->points[W], t->points[U]);
+    VECTOR_CROSSPRODUCT(t->normal, temp1, temp2);
+    Vector_normalize(t->normal);
 }
 
 // Find intersection points between ray and triangle.
-__device__ float Triangle_intersect (line_t * ray, triangle_t * triangle)
+__device__ float Triangle_intersect (line_t * ray, triangle_t * t)
 {
     float * direction = ray->direction,
-    	  * normal = triangle->normal,
-    	  * p0 = triangle->points[U],
+    	  * normal = t->normal,
+    	  * p0 = t->points[U],
     	  intersection[DSPACE], u[DSPACE], v[DSPACE], w[DSPACE], temp[DSPACE],
-          d, numerator, denominator, uu, uv, uw, vv, vw, s, t;
+          d, denominator, uu, uv, uw, vv, vw, r, s;
 
     //denominator = n . direction
     denominator = VECTOR_DOT(normal, direction);
@@ -34,9 +37,8 @@ __device__ float Triangle_intersect (line_t * ray, triangle_t * triangle)
 
     //numerator = n . (p0 - origin)
     VECTOR_SUB(temp, p0, ray->position);
-    numerator = VECTOR_DOT(normal, temp);
 
-    d = numerator / denominator;
+    d = VECTOR_DOT(normal, temp) / denominator;
 
     if (d < 0) {
         return NAN;
@@ -44,8 +46,8 @@ __device__ float Triangle_intersect (line_t * ray, triangle_t * triangle)
 
     findIntersectionPoint(intersection, ray, d);
 
-    VECTOR_SUB(u, triangle->points[V], p0);
-    VECTOR_SUB(v, triangle->points[W], p0);
+    VECTOR_SUB(u, t->points[V], p0);
+    VECTOR_SUB(v, t->points[W], p0);
     VECTOR_SUB(w, intersection, p0);
 
     uu = VECTOR_DOT(u, u);
@@ -56,13 +58,13 @@ __device__ float Triangle_intersect (line_t * ray, triangle_t * triangle)
 
     denominator = uv * uv - uu * vv;
 
-    s = (uv * vw - vv * uw) / denominator;
-    if (s < 0.0 || s > 1.0) {
+    r = (uv * vw - vv * uw) / denominator;
+    if (r < 0.0 || r > 1.0) {
         return NAN;
     }
 
-    t = (uv * uw - uu * vw) / denominator;
-    if (t < 0.0 || s + t > 1.0) {
+    s = (uv * uw - uu * vw) / denominator;
+    if (s < 0.0 || r + s > 1.0) {
         return NAN;
     }
 

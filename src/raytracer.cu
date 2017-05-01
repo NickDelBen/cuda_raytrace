@@ -13,22 +13,25 @@ __host__ void CudaCheckError()
 void Raytracer(COLOR * d_f, line_t * d_r, world_t * w, int size,
 	int blocks, int threads, int max_reflections)
 {
-	int b_work = size / blocks,
-		t_work = b_work / threads,
-		r_size = sizeof(line_t) * b_work,
-		f_size = sizeof(COLOR) * CHANNELS * b_work;
+	int b_work   = size / blocks,
+		t_work   = b_work / threads,
+        r_size   = sizeof(line_t) * size,
+        b_r_size = sizeof(line_t) * b_work,
+		b_f_size = sizeof(COLOR) * CHANNELS * b_work,
+        b_w_size = 0;
 
 	// Copy animated world to device.
-	world_t * d_w = World_toDevice(w);
+	world_t * d_w = World_toDevice(w, &b_w_size);
 
 	line_t * rays;
-	cudaMalloc(&rays, sizeof(line_t) * size);
-	cudaMemcpy(rays, d_r, sizeof(line_t) * size, cudaMemcpyDeviceToDevice);
+	cudaMalloc(&rays, r_size);
+	cudaMemcpy(rays, d_r, r_size, cudaMemcpyDeviceToDevice);
 
 	// Traces rays bounces.
+    printf("Allocating %d bytes of shared memory per block\n", b_r_size + b_f_size + b_w_size);
 	for (int i = 0; i < max_reflections; ++i) {
-		Raytracer_trace<<<blocks, threads, r_size + f_size>>>(rays, d_f, d_w,
-			size, b_work, t_work);
+		Raytracer_trace<<<blocks, threads, b_r_size + b_f_size + b_w_size>>>
+            (rays, d_f, d_w, b_w_size, b_work, t_work);
         CudaCheckError();
 	}
 
@@ -36,20 +39,21 @@ void Raytracer(COLOR * d_f, line_t * d_r, world_t * w, int size,
 	World_freeDevice(d_w);
 }
 
-__global__ void Raytracer_trace (line_t * d_r, COLOR * d_f, world_t * d_w,
-	int size, int b_work, int t_work)
+__global__ void Raytracer_trace (line_t * d_r, COLOR * d_f, world_t * w,
+	int w_size, int b_work, int t_work)
 {
-	int t_offset 	= threadIdx.x * t_work,
-		offset 		= blockIdx.x * b_work + t_offset;
+	int t_offset = threadIdx.x * t_work,
+		offset   = blockIdx.x * b_work + t_offset;
 
 	// ** Add world to shared memory for faster access time ** //
 
 	extern __shared__ float smem[];
 
-	// Assign shared memory locations to the rays and frame arrays.
-	line_t * rays = (line_t *)smem;
-	COLOR * frame = (COLOR *)&rays[b_work],
-			result[CHANNELS];
+	// Assign shared memory locations to the world, rays array and frame array.
+    world_t * d_w = World_toShared((void *)smem, w);
+	line_t  * rays = (line_t *)(smem + w_size);
+	COLOR   * frame = (COLOR *)&rays[b_work],
+	        result[CHANNELS];
 
 	// Copy from global memory to shared memory.
 	memcpy(&rays[t_offset], &d_r[offset], sizeof(line_t) * t_work);
@@ -58,7 +62,6 @@ __global__ void Raytracer_trace (line_t * d_r, COLOR * d_f, world_t * d_w,
 	// Process all the pixels assigned to this thread
 	for (int i = t_offset; i < t_offset + t_work; ++i) {
 		Raytracer_calculatePixelColor(result, d_w, &rays[i]);
-		// VECTOR_ADD(&frame[i], &frame[i], &result);
 	}
 
 	// Copy the results of the trace on the frame tile to the global memory.
