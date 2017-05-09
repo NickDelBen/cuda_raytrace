@@ -66,7 +66,7 @@ __global__ void Raytracer_trace (line_t * d_r, COLOR * d_f, world_t * w, int w_s
 
 	// Process all the pixels assigned to this thread
 	for (int i = t_offset; i < t_offset + t_work; ++i) {
-		Raytracer_calculatePixelColor(result, d_w, &rays[i]);
+		Raytracer_calculatePixelColor(result, /*d_w*/ w, &rays[i]);
 	}
 
 	// Copy the results of the trace on the frame tile to the global memory.
