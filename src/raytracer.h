@@ -4,6 +4,8 @@
 #ifndef _h_raytracer
 #define _h_raytracer
 
+#include <stdint.h>
+
 #include "world.h"
 #include "line.h"
 #include "vector3.h"

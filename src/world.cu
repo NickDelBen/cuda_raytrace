@@ -48,6 +48,7 @@ world_t * World_toDevice (world_t * source, int * size)
 		l_size = sizeof(light_t) * source->n_lights,
 		m_size = sizeof(material_t) * source->n_materials,
 		o_size = sizeof(object_t) * source->n_objects;
+
 	// Create temporary data to correct pointers on device
 	result = (world_t *)malloc(w_size);
 	memcpy(result, source, w_size);
@@ -57,12 +58,9 @@ world_t * World_toDevice (world_t * source, int * size)
 	cudaMalloc(&(result->materials), m_size);
 	cudaMalloc(&(result->objects), o_size);
 	// Copy the world object data to the device
-	cudaMemcpy(result->lights, source->lights, l_size,
-		cudaMemcpyHostToDevice);
-	cudaMemcpy(result->materials, source->materials, m_size,
-		cudaMemcpyHostToDevice);
-	cudaMemcpy(result->objects, source->objects, o_size,
-		cudaMemcpyHostToDevice);
+	cudaMemcpy(result->lights, source->lights, l_size, cudaMemcpyHostToDevice);
+	cudaMemcpy(result->materials, source->materials, m_size, cudaMemcpyHostToDevice);
+	cudaMemcpy(result->objects, source->objects, o_size, cudaMemcpyHostToDevice);
 
 	// Allocate space for the world on the device
 	cudaMalloc(&final, sizeof(world_t));
@@ -72,7 +70,6 @@ world_t * World_toDevice (world_t * source, int * size)
 	free(result);
 
 	*size = w_size + l_size + m_size + o_size;
-
 	return final;
 }
 
@@ -119,7 +116,7 @@ void World_freeDevice (world_t * world)
 {
 	// Copy the world object back to host so we can read array locations
 	world_t * temp = (world_t *) malloc(sizeof(world_t));
-	cudaMemcpy(&temp, &world, sizeof(world_t), cudaMemcpyDeviceToHost);
+	cudaMemcpy(temp, world, sizeof(world_t), cudaMemcpyDeviceToHost);
 	// Free memory allocated for lights
 	cudaFree(temp->lights);
 	// Free memory allocated for materials

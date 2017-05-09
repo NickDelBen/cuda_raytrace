@@ -25,8 +25,10 @@ void do_work()
 	clock_t tick = clock();
 	// Trace the next frame
 	Raytracer(d_frame, d_rays, h_world, h_camera->width * h_camera->height, BLOCKS, THREADS, MAX_REFLECTIONS);
+	cudaDeviceSynchronize();
 	// Copy the raytraced frame back to the host
 	cudaMemcpy(canvas->pixels, d_frame, sizeof(COLOR) * CHANNELS * h_camera->width * h_camera->height, cudaMemcpyDeviceToHost);
+	cudaDeviceSynchronize();
 	// animate(w);
 	clock_t tock = clock();
 	sprintf(canvas->message, "FPS: %.2lf\n", 1.0 / ((double)(tock - tick) / CLOCKS_PER_SEC));
@@ -74,13 +76,13 @@ int main(int argc, char ** argv)
 	free(title);
 	printf("Created canvas\n");
 
-	Canvas_setRenderFunction(canvas, do_work, 1);
+	Canvas_setRenderFunction(canvas, do_work, 1000);
 	printf("Set canvas render function\n");
 
 	// Begin the main render loop
 	printf("Beginning raytracer loop\n");
 	Canvas_startLoop(canvas, argc, argv);
-	//Raytracer(d_frame, d_rays, h_world, h_camera->width * h_camera->height, BLOCKS, THREADS, MAX_REFLECTIONS);
+	// Raytracer(d_frame, d_rays, h_world, h_camera->width * h_camera->height, BLOCKS, THREADS, MAX_REFLECTIONS);
 
 	Canvas_free(canvas);
 	printf("Freed canvas\n");

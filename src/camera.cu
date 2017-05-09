@@ -62,7 +62,7 @@ __global__ void Camera_createRays (camera_t * d_camera, line_t * rays)
 		cur = rays + pixels;
 		// Calculate the components of the position
 		VECTOR_SCALE_3(vert, d_camera->comp_vert, y);
-		VECTOR_SCALE_3(horiz, d_camera->comp_horiz, x);
+		VECTOR_SCALE_3(horiz, d_camera->comp_horiz, x);	
 		// Add the components to get true position
 		VECTOR_ADD(cur->position, vert, horiz);
 		++pixels;
