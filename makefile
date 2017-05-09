@@ -15,7 +15,6 @@ DD=doc
 
 # NVIDIA COMPILER FLAGS
 FNV=-Wno-deprecated-gpu-targets 
-#FNV=-c -O2 --compiler-bindir /usr/bin
 # Compiler flags to use for debugging
 FD=$(FNV) -Wall -g 
 # Compiler flags to use for object files

@@ -29,59 +29,42 @@ camera_t * Camera_read (FILE * file)
 }
 
 // Creates the rays from a camera on the device
-void Camera_createRays (camera_t * h_camera, camera_t * d_camera,
-	line_t * rays, unsigned int blocks, unsigned int threads)
+__global__ void Camera_createRays (camera_t * d_camera, line_t * rays)
 {
-	unsigned int per_warp = blocks * threads;
-	unsigned int num_rays = h_camera->width * h_camera->height;
-	Camera_createRays_k<<<blocks, threads>>>(d_camera, rays,
-		num_rays / per_warp, num_rays % per_warp);
-}
+	unsigned int thread_count, thread_real, extra, to_do, pixels, x, y;
+	float vert[DSPACE], horiz[DSPACE];
+	line_t *cur;
 
-
-// Kernel for creating the rays from a camera on the device
-__global__ void Camera_createRays_k (camera_t * camera, line_t * rays,
-	unsigned int to_do, unsigned int extra)
-{
-	float start[DSPACE], curr[DSPACE];
-	unsigned int thread_real, per_thread, current_ray, current_pos, target;
-
-	// Find real thread index
+	pixels = (((unsigned int) d_camera->width) * ((unsigned int) d_camera->height));
+	// Calculate number of threads kernel is using
+	thread_count = gridDim.x * blockDim.x;
+	// Find index of current thread
 	thread_real = blockDim.x * blockIdx.x + threadIdx.x;
-	// Find amount of work this thread has to do
-	per_thread = thread_real < extra ? to_do + 1 : to_do;
-	// Find out the starting ray index for this thread
-	current_ray = to_do * thread_real +
-		(thread_real < extra ? thread_real : extra);
-	// Find the start position of the row
-	current_pos = current_ray / camera->width;
-	VECTOR_COPY(start, camera->comp_vert);
-	VECTOR_SCALE(camera->comp_vert, current_pos);
-	// Find location into current row we are
-	current_pos = current_ray % ((int) camera->width);
-	VECTOR_COPY(curr, camera->comp_horiz);
-	VECTOR_SCALE(curr, current_pos);
-	VECTOR_ADD(curr, curr, start);
-	// Calculate the rays this thread is responsible for
-	target = current_ray + per_thread;
-	while (current_ray < target) {
-		// Store this ray in the result ray location
-		VECTOR_COPY(rays[current_ray].position, curr);
-		VECTOR_COPY(rays[current_ray].direction, camera->normal);
-		// Move to next ray
-		current_ray++;
-		current_pos++;
-		if (current_pos >= camera->width) {
-			// We have reached end of row
-			current_pos = 0;
-			// Increase start by a single row
-			VECTOR_ADD(start, start, camera->comp_vert);
-			// Current position is start of next row
-			VECTOR_COPY(curr, start);
-		} else {
-			// We move to next column in row
-			VECTOR_ADD(curr, curr, camera->comp_horiz);
-		}
+	// Calculate the amount of threads that must do an additional pixel
+	extra = pixels % thread_count;
+	// Calculate the amount of pixels this thread has to take care of
+	to_do = pixels / thread_count;
+
+	// Calculate the start and end pixel indices for this thread
+	pixels = thread_real * to_do;
+	if (thread_real >= extra) {
+		pixels += extra;
+	} else {
+		pixels += thread_real;
+		to_do += 1;
+	}
+	to_do += pixels;
+
+	while (pixels < to_do) {
+		// Calculate coordinate of target pixel in imaging plane
+		y = pixels / ((unsigned int) d_camera->width);
+		x = pixels % ((unsigned int) d_camera->width);
+		cur = rays + pixels;
+		// Calculate the components of the position
+		VECTOR_SCALE_3(vert, d_camera->comp_vert, y);
+		VECTOR_SCALE_3(horiz, d_camera->comp_horiz, x);
+		// Add the components to get true position
+		VECTOR_ADD(cur->position, vert, horiz);
 	}
 }
 
@@ -104,6 +87,7 @@ void Camera_calculateVectors (camera_t * cam)
 	// Get the direction vectors between the corners
 	VECTOR_SUB(cam->comp_vert, cam->top_left, cam->bottom_left);
 	VECTOR_SUB(cam->comp_horiz, cam->bottom_right, cam->bottom_left);
+
 	// Turn the direction vectors into unit vectors
 	Vector_normalize(cam->comp_vert);
 	Vector_normalize(cam->comp_horiz);

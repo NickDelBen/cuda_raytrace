@@ -4,12 +4,15 @@
 #ifndef _h_vector3
 #define _h_vector3
 
+#include <stdio.h>
 #include <math.h>
 
 #define DSPACE 3
 #define X 0
 #define Y 1
 #define Z 2
+
+#define VECTOR_PRINT(v)   printf("[%f %f %f]", (v)[0], (v)[1], (v)[2])
 
 /******************************
 * Adds the compononents of a vector to the specified vector

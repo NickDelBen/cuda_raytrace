@@ -62,7 +62,7 @@ int main(int argc, char ** argv)
 		size = h * w;
 
 	cudaMalloc(&d_rays, sizeof(line_t) * size);
-	Camera_createRays(h_camera, d_camera, d_rays, BLOCKS, THREADS);
+	Camera_createRays<<<BLOCKS, THREADS>>>(d_camera, d_rays);
 	printf("Created rays from camera on device\n");
 
 	cudaMalloc(&d_frame, sizeof(COLOR) * CHANNELS * size);

@@ -10,8 +10,7 @@ __host__ void CudaCheckError()
     }
 }
 
-void Raytracer(COLOR * d_f, line_t * d_r, world_t * w, int size,
-	int blocks, int threads, int max_reflections)
+void Raytracer(COLOR * d_f, line_t * d_r, world_t * w, int size, int blocks, int threads, int max_reflections)
 {
 	int b_work   = size / blocks,
 		t_work   = b_work / threads,
@@ -21,15 +20,7 @@ void Raytracer(COLOR * d_f, line_t * d_r, world_t * w, int size,
         b_w_size = 0;
 
 	// Copy animated world to device.
-<<<<<<< HEAD
-	world_t * d_w = World_toDevice(w);
-
-	// Initialize frame
-	Frame_init<<<blocks, threads, f_size>>>(d_f, size);
-	cudaDeviceSynchronize();
-=======
 	world_t * d_w = World_toDevice(w, &b_w_size);
->>>>>>> c88360d7779e7d3393a8b598410ed5f78cbdcf81
 
 	line_t * rays;
 	cudaMalloc(&rays, r_size);
@@ -74,11 +65,7 @@ __global__ void Raytracer_trace (line_t * d_r, COLOR * d_f, world_t * w,
 
 	// Copy the results of the trace on the frame tile to the global memory.
 	memcpy(&d_r[offset], &rays[t_offset], sizeof(line_t) * t_work);
-<<<<<<< HEAD
-	memcpy(&d_f[offset], &frame[t_offset], sizeof(color_t) * t_work);
-=======
 	memcpy(&d_f[offset], &frame[t_offset], sizeof(COLOR) * CHANNELS * t_work);
->>>>>>> c88360d7779e7d3393a8b598410ed5f78cbdcf81
 }
 
 __device__ void Raytracer_calculatePixelColor (COLOR * color, world_t * d_w,
@@ -102,19 +89,7 @@ __device__ void Raytracer_calculatePixelColor (COLOR * color, world_t * d_w,
     if (object != NULL) {
     	Raytracer_evaluateShadingModel(color, d_w, object, ray,
     		distance);
-<<<<<<< HEAD
-
-    // if (object != NULL) {
-    // 	Raytracer_evaluateShadingModel(&shading_model, d_w, object, ray,
-    // 		distance);
-
-    //     color->r = min(shading_model.r, 255);
-    //     color->b = min(shading_model.b, 255);
-    //     color->g = min(shading_model.g, 255);
-    // }
-=======
     }
->>>>>>> c88360d7779e7d3393a8b598410ed5f78cbdcf81
 }
 
 __device__ void Raytracer_evaluateShadingModel (COLOR * shading_model,
