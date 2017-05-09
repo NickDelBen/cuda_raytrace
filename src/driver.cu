@@ -9,7 +9,7 @@
 #include "canvas.h"
 
 #define WINDOW_TITLE "CUDA Raytracer by Nick & Zaid\0"
-#define BLOCKS 256
+#define BLOCKS 256 
 #define THREADS 64
 #define MAX_REFLECTIONS 10
 

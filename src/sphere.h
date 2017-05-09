@@ -36,7 +36,6 @@ __device__ float Sphere_intersect (line_t * ray, sphere_t * s);
 * @param s            A pointer to the sphere that is intersected.
 * @param intersection A pointer to the intersection point.
 ******************************/
-__device__ void Sphere_normal (float * normal, sphere_t * s,
-	float * intersection);
+__device__ void Sphere_normal (float * normal, sphere_t * s, float * intersection);
 
 #endif
