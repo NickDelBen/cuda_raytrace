@@ -60,7 +60,7 @@ documentation:
 # Tar the project to make it more portable
 tarball:
 	# Creating tarball
-	tar -zcv -f $(project).tar.gz Makefile src README{.src,,.txt,.md} Doxyfile
+	tar -zcv -f $(project).tar.gz Makefile src README{.src,,.txt,.md} Doxyfile scene1.txt
 
 
 ################################################
