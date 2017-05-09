@@ -28,10 +28,10 @@
 typedef struct canvas_t {
 	unsigned int height;                   // Pixel height of canvas
 	unsigned int width;                    // Pixel width of canvas
-	color_t* pixels;                       // Actual pixel data
+	COLOR * pixels;                        // Actual pixel data
 	char window_name[WINDOW_TITLE_BUFFER]; // Name of canvas window
 	char message[MESSAGE_BUFFER];          // Buffer for message to be rendered
-	void (*animate)();                     // Function to animate canvas
+	void (* animate)();                     // Function to animate canvas
 	unsigned int delay;                    // Delay between redraws
 } canvas_t;
 
@@ -42,7 +42,7 @@ typedef struct canvas_t {
 * @param height       Height of the opengl window
 * @param window_title Name of the opengl window
 **********************/
-canvas_t* Canvas_create (int height, int width, char* window_name);
+canvas_t * Canvas_create (int height, int width, char * window_name);
 
 /***********************
 * Sets the pixel at the current location to the specified value
@@ -56,12 +56,14 @@ void Canvas_setPixel(int x, int y, int r, int g, int b);
 
 /**********************
 * Set the loop function for the canvas.
-* The specified function will be called every specified amount of time for redrawing
+* The specified function will be called every specified amount of time
+* for redrawing
 * @param can  Canvas to set render function for
 * @param func Animation function that will be called between redraws
 * @param time Amount of time (ms) between redraws
 **********************/
-void Canvas_setRenderFunction (canvas_t* can, void (func)(), unsigned int time);
+void Canvas_setRenderFunction (canvas_t * can, void (func)(),
+	unsigned int time);
 
 /**********************
 * Runs the render loop of the specified canvas
@@ -69,12 +71,12 @@ void Canvas_setRenderFunction (canvas_t* can, void (func)(), unsigned int time);
 * @param argc
 * @oaram argv
 **********************/
-void Canvas_startLoop (canvas_t* can, int argc, char** argv);
+void Canvas_startLoop (canvas_t * can, int argc, char ** argv);
 
 /**********************
 * Frees resources allocated for a canvas
 * @param target Canvas to free resources for
 **********************/
-void Canvas_free (canvas_t* target);
+void Canvas_free (canvas_t * target);
 
 #endif

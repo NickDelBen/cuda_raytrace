@@ -14,15 +14,15 @@
 
 // Defines a camera
 typedef struct camera_t {
-	float bottom_left[3];  // Second corner of imaging plane
-	float top_left[3];     // Top left of imaging plane
-	float top_right[3];    // First corner of imaging plane
-	float bottom_right[3]; // Bottom right of imaging plane
-	float height;          // Height of imaging plane view box
-	float width;           // Width of imaging plane view box
-	float comp_vert[3];    // Vertical unit component of imaging plane
-	float comp_horiz[3];   // Horizontal component of imaging plane
-	float normal[3];       // Normal to imaging plane
+	float bottom_left[DSPACE];  // Second corner of imaging plane
+	float top_left[DSPACE];     // Top left of imaging plane
+	float top_right[DSPACE];    // First corner of imaging plane
+	float bottom_right[DSPACE]; // Bottom right of imaging plane
+	float height;               // Height of imaging plane view box
+	float width;                // Width of imaging plane view box
+	float comp_vert[DSPACE];    // Vertical unit component of imaging plane
+	float comp_horiz[DSPACE];   // Horizontal component of imaging plane
+	float normal[DSPACE];       // Normal to imaging plane
 } camera_t;
 
 /******************************
@@ -31,7 +31,7 @@ typedef struct camera_t {
 * @param file File to read camera from
 * @return pointer to location of new camera on host
 ******************************/
-camera_t* Camera_read (FILE* file);
+camera_t* Camera_read (FILE * file);
 
 /******************************
 * Creates the rays from a camera on the device
@@ -39,7 +39,8 @@ camera_t* Camera_read (FILE* file);
 * @param d_camera Camera on device to create rays for
 * @param rays   Pointer to memory allocated on device for rays
 ******************************/
-void Camera_createRays (camera_t* h_camera, camera_t* d_camera, line_t* rays, unsigned int blocks, unsigned int threads);
+void Camera_createRays (camera_t * h_camera, camera_t * d_camera,
+	line_t * rays, unsigned int blocks, unsigned int threads);
 
 /******************************
 * Kernel for creating the rays from a camera on the device
@@ -48,7 +49,8 @@ void Camera_createRays (camera_t* h_camera, camera_t* d_camera, line_t* rays, un
 * @param to_do  Number of rays to be created per thread
 * @param extra  How many sections need one additional ray
 ******************************/
-__global__ void Camera_createRays_k (camera_t* camera, line_t* rays, unsigned int to_do, unsigned int extra);
+__global__ void Camera_createRays_k (camera_t * camera, line_t * rays,
+	unsigned int to_do, unsigned int extra);
 
 /******************************
 * Copies the specified camera to the device
@@ -56,24 +58,24 @@ __global__ void Camera_createRays_k (camera_t* camera, line_t* rays, unsigned in
 * @param source Camera on host to copy to device
 * @return pointer to location of new camera on device
 ******************************/
-camera_t* Camera_toDevice (camera_t* source);
+camera_t* Camera_toDevice (camera_t * source);
 
 /******************************
 * Calculate the camera direction vectors and normal
 * @param cam Camera to calculate direction vectors for
 ******************************/
-void Camera_calculateVectors (camera_t* cam);
+void Camera_calculateVectors (camera_t * cam);
 
 /******************************
 * Frees resources allocated for a camera on the host
 * @param camera Camera to free resources for
 ******************************/
-void Camera_freeHost (camera_t* camera);
+void Camera_freeHost (camera_t * camera);
 
 /******************************
 * Frees resources allocated for a camera on the device
 * @param camera Camera to free resources for
 ******************************/
-void Camera_freeDevice (camera_t* camera);
+void Camera_freeDevice (camera_t * camera);
 
 #endif

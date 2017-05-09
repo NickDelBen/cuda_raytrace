@@ -2,15 +2,19 @@
 #include "camera.h"
 
 // Reads the details of a camera from the specified file
-camera_t* Camera_read (FILE* file)
+camera_t * Camera_read (FILE * file)
 {
-	camera_t* result = (camera_t*) malloc(sizeof(camera_t));
+	camera_t * result = (camera_t *) malloc(sizeof(camera_t));
 
-	fscanf(file, "CAM %f %f %f %f %f %f %f %f %f %f %f %f\n",
-		&(result->bottom_left[0]), &(result->bottom_left[1]), &(result->bottom_left[2]),
-		&(result->top_left[0]), &(result->top_left[1]), &(result->top_left[2]),
-		&(result->top_right[0]), &(result->top_right[1]), &(result->top_right[2]), 
-		&(result->bottom_right[0]), &(result->bottom_right[1]), &(result->bottom_right[2]));
+	fscanf(file, "CAM POINTS "
+		"(%f, %f, %f), "
+		"(%f, %f, %f), "
+		"(%f, %f, %f), "
+		"(%f, %f, %f)\n",
+		&(result->bottom_left[X]), &(result->bottom_left[Y]), &(result->bottom_left[Z]),
+		&(result->top_left[X]), &(result->top_left[Y]), &(result->top_left[Z]),
+		&(result->top_right[X]), &(result->top_right[Y]), &(result->top_right[Z]), 
+		&(result->bottom_right[X]), &(result->bottom_right[Y]), &(result->bottom_right[Z]));
 
 	// Get the direction vectors between the corners
 	VECTOR_SUB(result->comp_vert, result->top_left, result->bottom_left);
@@ -25,18 +29,21 @@ camera_t* Camera_read (FILE* file)
 }
 
 // Creates the rays from a camera on the device
-void Camera_createRays (camera_t* h_camera, camera_t* d_camera, line_t* rays, unsigned int blocks, unsigned int threads)
+void Camera_createRays (camera_t * h_camera, camera_t * d_camera,
+	line_t * rays, unsigned int blocks, unsigned int threads)
 {
 	unsigned int per_warp = blocks * threads;
 	unsigned int num_rays = h_camera->width * h_camera->height;
-	Camera_createRays_k<<<blocks, threads>>>(d_camera, rays, num_rays / per_warp, num_rays % per_warp);
+	Camera_createRays_k<<<blocks, threads>>>(d_camera, rays,
+		num_rays / per_warp, num_rays % per_warp);
 }
 
 
 // Kernel for creating the rays from a camera on the device
-__global__ void Camera_createRays_k (camera_t* camera, line_t* rays, unsigned int to_do, unsigned int extra)
+__global__ void Camera_createRays_k (camera_t * camera, line_t * rays,
+	unsigned int to_do, unsigned int extra)
 {
-	float start[3], curr[3];
+	float start[DSPACE], curr[DSPACE];
 	unsigned int thread_real, per_thread, current_ray, current_pos, target;
 
 	// Find real thread index
@@ -44,7 +51,8 @@ __global__ void Camera_createRays_k (camera_t* camera, line_t* rays, unsigned in
 	// Find amount of work this thread has to do
 	per_thread = thread_real < extra ? to_do + 1 : to_do;
 	// Find out the starting ray index for this thread
-	current_ray = to_do * thread_real + (thread_real < extra ? thread_real : extra);
+	current_ray = to_do * thread_real +
+		(thread_real < extra ? thread_real : extra);
 	// Find the start position of the row
 	current_pos = current_ray / camera->width;
 	VECTOR_COPY(start, camera->comp_vert);
@@ -78,9 +86,9 @@ __global__ void Camera_createRays_k (camera_t* camera, line_t* rays, unsigned in
 }
 
 // Copies the specified camera to the device
-camera_t* Camera_toDevice (camera_t* source)
+camera_t * Camera_toDevice (camera_t * source)
 {
-	camera_t* result;
+	camera_t * result;
 
 	// Allocate space for camera on device
 	cudaMalloc(&result, sizeof(camera_t));
@@ -91,7 +99,7 @@ camera_t* Camera_toDevice (camera_t* source)
 }
 
 // Calculate the camera direction vectors and normal
-void Camera_calculateVectors (camera_t* cam)
+void Camera_calculateVectors (camera_t * cam)
 {
 	// Get the direction vectors between the corners
 	VECTOR_SUB(cam->comp_vert, cam->top_left, cam->bottom_left);
@@ -104,13 +112,13 @@ void Camera_calculateVectors (camera_t* cam)
 }
 
 // Frees resources allocated for a camera on the host
-void Camera_freeHost (camera_t* camera)
+void Camera_freeHost (camera_t * camera)
 {
 	free(camera);
 }
 
 // Frees resources allocated for a camera on the device
-void Camera_freeDevice (camera_t* camera)
+void Camera_freeDevice (camera_t * camera)
 {
 	cudaFree(camera);
 }

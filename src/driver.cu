@@ -13,12 +13,12 @@
 #define THREADS 64
 #define MAX_REFLECTIONS 10
 
-camera_t *h_camera;
-color_t  *d_frame;
-canvas_t *canvas;
-line_t   *d_rays;
-camera_t *d_camera;
-world_t  *h_world;
+camera_t * h_camera;
+COLOR    * d_frame;
+canvas_t * canvas;
+line_t   * d_rays;
+camera_t * d_camera;
+world_t  * h_world;
 
 void do_work()
 {
@@ -26,20 +26,20 @@ void do_work()
 	// Trace the next frame
 	Raytracer(d_frame, d_rays, h_world, h_camera->width * h_camera->height, BLOCKS, THREADS, MAX_REFLECTIONS);
 	// Copy the raytraced frame back to the host
-	cudaMemcpy(canvas->pixels, d_frame, sizeof(color_t) * h_camera->width * h_camera->height, cudaMemcpyDeviceToHost);
+	cudaMemcpy(canvas->pixels, d_frame, sizeof(COLOR) * CHANNELS * h_camera->width * h_camera->height, cudaMemcpyDeviceToHost);
 	// animate(w);
 	clock_t tock = clock();
 	sprintf(canvas->message, "FPS: %.2lf\n", 1.0 / ((double)(tock - tick) / CLOCKS_PER_SEC));
 }
 
-int main(int argc, char **argv)
+int main(int argc, char ** argv)
 {
 	if (argc != 2) {
 		printf("Please provide the scene file path as an argument.\n");
 		return EXIT_FAILURE;
 	}
 
-	FILE *fp = fopen(argv[1], "r");
+	FILE * fp = fopen(argv[1], "r");
 
 	if (!fp) {
 		printf("Unable to open file.\n");
@@ -65,10 +65,10 @@ int main(int argc, char **argv)
 	Camera_createRays(h_camera, d_camera, d_rays, BLOCKS, THREADS);
 	printf("Created rays from camera on device\n");
 
-	cudaMalloc(&d_frame, sizeof(color_t) * size);
+	cudaMalloc(&d_frame, sizeof(COLOR) * CHANNELS * size);
 	printf("Created space for frame result on device\n");
 
-	char* title = (char*)malloc(sizeof(char) * strlen(WINDOW_TITLE));
+	char * title = (char *)malloc(sizeof(char) * strlen(WINDOW_TITLE));
 	memcpy(title, WINDOW_TITLE, strlen(WINDOW_TITLE));
 	canvas = Canvas_create(h, w, title);
 	free(title);

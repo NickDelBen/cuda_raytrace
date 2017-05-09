@@ -68,9 +68,9 @@ tarball:
 ################################################
 
 #Build project executable
-$(project): prep driver.o light.o object.o material.o sphere.o triangle.o world.o vector3.o camera.o raytracer.o frame.o canvas.o helpers.o
+$(project): prep driver.o light.o object.o material.o sphere.o triangle.o world.o vector3.o camera.o raytracer.o canvas.o helpers.o
 	# Building and linking the project binary
-	$(cc) -rdc=true -o $(DB)/$@ $(DO)/driver.o $(DO)/light.o $(DO)/object.o $(DO)/material.o $(DO)/sphere.o $(DO)/triangle.o $(DO)/world.o $(DO)/vector3.o $(DO)/camera.o $(DO)/raytracer.o $(DO)/frame.o $(DO)/canvas.o $(DO)/helpers.o $(FB)
+	$(cc) -rdc=true -o $(DB)/$@ $(DO)/driver.o $(DO)/light.o $(DO)/object.o $(DO)/material.o $(DO)/sphere.o $(DO)/triangle.o $(DO)/world.o $(DO)/vector3.o $(DO)/camera.o $(DO)/raytracer.o $(DO)/canvas.o $(DO)/helpers.o $(FB)
 
 ################################################
 # Object Files
@@ -102,7 +102,7 @@ triangle.o: $(DS)/triangle.cu
 
 world.o: $(DS)/world.cu
 	# Compiling world object
-	$(cc) $(FO) -o $(DO)/$@ $^
+	$(cc) $(FO) $(LC) -o $(DO)/$@ $^
 
 vector3.o: $(DS)/vector3.cu
 	# Compiling vector object
@@ -115,10 +115,6 @@ camera.o: $(DS)/camera.cu
 raytracer.o: $(DS)/raytracer.cu
 	# Compiling raytracer object
 	$(cc) $(FO) $(LC) -o $(DO)/$@ $^
-
-frame.o: $(DS)/frame.cu
-	# Compiling frame object
-	$(cc) $(FO) -o $(DO)/$@ $^
 
 canvas.o: $(DS)/canvas.cu
 	# Compiling canvas object
