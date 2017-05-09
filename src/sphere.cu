@@ -5,7 +5,7 @@
 void Sphere_readTo (FILE * file, sphere_t * s)
 {
 	fscanf(file, 
-        "CENTER (%hd, %hd, %hd), "
+        "CENTER (%f, %f, %f), "
         "RADIUS %f\n",
 		&(s->center[X]), &(s->center[Y]), &(s->center[Z]),
 		&(s->radius));

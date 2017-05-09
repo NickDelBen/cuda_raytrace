@@ -6,13 +6,12 @@
 
 #include <stdio.h>
 
-#include "point.h"
 #include "line.h"
 #include "vector3.h"
 
 // Defines a sphere
 typedef struct sphere_t {
-	POINT center[DSPACE]; // Position of the object
+	float center[DSPACE]; // Position of the object
 	float radius;   	  // Radius of the sphere
 } sphere_t;
 

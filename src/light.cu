@@ -5,7 +5,7 @@
 void Light_readTo (FILE * file, light_t * light)
 {
 	fscanf(file,
-		"POSITION (%hd, %hd, %hd), "
+		"POSITION (%f, %f, %f), "
 		"COLOR (%hhu, %hhu, %hhu), "
 		"INTENSITY %f\n",
 		&(light->pos[X]), &(light->pos[Y]), &(light->pos[Z]), 
