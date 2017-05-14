@@ -25,7 +25,7 @@ void Object_readTo (FILE * file, object_t * object)
 
 // Find intersection points between ray and object.
 __device__ float Object_intersect (line_t * ray, object_t * object)
-{    
+{
     switch(object->type) {
 
         case SPHERE: {

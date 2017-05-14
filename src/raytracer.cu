@@ -40,22 +40,14 @@ void Raytracer(COLOR * d_f, line_t * d_r, world_t * w, int size, int blocks, int
 
 __global__ void Raytracer_trace (line_t * d_r, COLOR * d_f, world_t * w, int w_size, int b_work, int t_work)
 {
-    // Calculate number of threads kernel is using
-    unsigned int thread_count = gridDim.x * blockDim.x;
-    // Find index of current thread
-    unsigned int thread_real = blockDim.x * blockIdx.x + threadIdx.x;
-
-
-
 	int t_offset = threadIdx.x * t_work,
 		offset   = blockIdx.x * b_work + t_offset;
 
 	// ** Add world to shared memory for faster access time ** //
-
 	extern __shared__ uint8_t smem[];
 
 	// Assign shared memory locations to the world, rays array and frame array.
-    world_t * d_w = World_toShared((void *) smem, w);
+    // world_t * d_w = World_toShared((void *) smem, w);
 	line_t  * rays = (line_t *)(smem + w_size);
 	COLOR   * frame = (COLOR *)&rays[b_work],
 	        result[CHANNELS];
@@ -66,7 +58,7 @@ __global__ void Raytracer_trace (line_t * d_r, COLOR * d_f, world_t * w, int w_s
 
 	// Process all the pixels assigned to this thread
 	for (int i = t_offset; i < t_offset + t_work; ++i) {
-		Raytracer_calculatePixelColor(result, /*d_w*/ w, &rays[i]);
+		Raytracer_calculatePixelColor(&frame[i], w, &rays[i]);
 	}
 
 	// Copy the results of the trace on the frame tile to the global memory.
@@ -94,7 +86,6 @@ __device__ void Raytracer_calculatePixelColor (COLOR * color, world_t * d_w,
 
     if (object != NULL) {
     	Raytracer_evaluateShadingModel(color, d_w, object, ray, distance);
-        printf("Intersect: %f\n", distance);
     }
 }
 
