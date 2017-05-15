@@ -34,7 +34,7 @@ void Canvas_setPixel(int x, int y, int r, int g, int b)
 {
    COLOR * t;
 
-   t = &(global_canvas->pixels[y * global_canvas->width + x]);
+   t = &(global_canvas->pixels[(y * global_canvas->width + x) * CHANNELS]);
    t[R] = r;
    t[G] = g;
    t[B] = b;
@@ -91,7 +91,7 @@ void can_display()
    glBegin(GL_POINTS);
    curr = global_canvas->pixels;
    for (y_itr = 0; y_itr < global_canvas->height; y_itr++) {
-      for (x_itr = 0; x_itr < global_canvas->width; x_itr++, curr++) {
+      for (x_itr = 0; x_itr < global_canvas->width; x_itr++, curr += CHANNELS) {
          glColor3ub(curr[R], curr[G], curr[B]);
          glVertex2f(x_itr, y_itr);
       }

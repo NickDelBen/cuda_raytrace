@@ -29,6 +29,7 @@ void do_work()
 	// Copy the raytraced frame back to the host
 	cudaMemcpy(canvas->pixels, d_frame, sizeof(COLOR) * CHANNELS * h_camera->width * h_camera->height, cudaMemcpyDeviceToHost);
 	cudaDeviceSynchronize();
+
 	// animate(w);
 	clock_t tock = clock();
 	sprintf(canvas->message, "FPS: %.2lf\n", 1.0 / ((double)(tock - tick) / CLOCKS_PER_SEC));

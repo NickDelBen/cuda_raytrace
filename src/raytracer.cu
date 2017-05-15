@@ -46,22 +46,24 @@ __global__ void Raytracer_trace (line_t * d_r, COLOR * d_f, world_t * w, int w_s
 	extern __shared__ uint8_t smem[];
 
 	// Assign shared memory locations to the world, rays array and frame array.
-    world_t * d_w = World_toShared((void *) smem, w);
+    // world_t * d_w = World_toShared((void *) smem, w);
 	line_t  * rays = (line_t *)(smem + w_size);
 	COLOR   * frame = (COLOR *)&rays[b_work];
 
 	// Copy from global memory to shared memory.
 	memcpy(&rays[t_offset], &d_r[offset], sizeof(line_t) * t_work);
-	memcpy(&frame[t_offset], &d_f[offset], sizeof(COLOR) * CHANNELS * t_work);
+	memcpy(&frame[t_offset * CHANNELS], &d_f[offset * CHANNELS],
+        sizeof(COLOR) * CHANNELS * t_work);
 
 	// Process all the pixels assigned to this thread
 	for (int i = t_offset; i < t_offset + t_work; ++i) {
-		Raytracer_calculatePixelColor(&frame[i], w, &rays[i]);
+		Raytracer_calculatePixelColor(&frame[i * CHANNELS], w, &rays[i]);
 	}
 
 	// Copy the results of the trace on the frame tile to the global memory.
 	memcpy(&d_r[offset], &rays[t_offset], sizeof(line_t) * t_work);
-	memcpy(&d_f[offset], &frame[t_offset], sizeof(COLOR) * CHANNELS * t_work);
+	memcpy(&d_f[offset * CHANNELS], &frame[t_offset * CHANNELS],
+        sizeof(COLOR) * CHANNELS * t_work);
 }
 
 __device__ void Raytracer_calculatePixelColor (COLOR * color, world_t * d_w,
