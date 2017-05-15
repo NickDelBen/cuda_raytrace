@@ -27,12 +27,11 @@ void Raytracer(COLOR * d_f, line_t * d_r, world_t * w, int size, int blocks, int
 	cudaMemcpy(rays, d_r, r_size, cudaMemcpyDeviceToDevice);
 
 	// Traces rays bounces.
-    printf("Allocating %d bytes of shared memory per block\n", b_r_size + b_f_size + b_w_size);
-	for (int i = 0; i < max_reflections; ++i) {
+	// for (int i = 0; i < max_reflections; ++i) {
 		Raytracer_trace<<<blocks, threads, b_r_size + b_f_size + b_w_size>>>(rays, d_f, d_w, b_w_size, b_work, t_work);
         CudaCheckError();
         cudaDeviceSynchronize();
-	}
+	// }
 
 	// Frees world from device memory.
 	World_freeDevice(d_w);
@@ -47,10 +46,9 @@ __global__ void Raytracer_trace (line_t * d_r, COLOR * d_f, world_t * w, int w_s
 	extern __shared__ uint8_t smem[];
 
 	// Assign shared memory locations to the world, rays array and frame array.
-    // world_t * d_w = World_toShared((void *) smem, w);
+    world_t * d_w = World_toShared((void *) smem, w);
 	line_t  * rays = (line_t *)(smem + w_size);
-	COLOR   * frame = (COLOR *)&rays[b_work],
-	        result[CHANNELS];
+	COLOR   * frame = (COLOR *)&rays[b_work];
 
 	// Copy from global memory to shared memory.
 	memcpy(&rays[t_offset], &d_r[offset], sizeof(line_t) * t_work);
@@ -89,16 +87,16 @@ __device__ void Raytracer_calculatePixelColor (COLOR * color, world_t * d_w,
     }
 }
 
-__device__ void Raytracer_evaluateShadingModel (COLOR * shading_model,
+__device__ void Raytracer_evaluateShadingModel (COLOR * color,
 	world_t  * d_w, object_t * i_object, line_t * ray, float distance)
 {
-    COLOR temp[CHANNELS];
+    COLOR shading[CHANNELS];
 	material_t material = d_w->materials[i_object->mat];
 	float ambient = d_w->global_ambient * material.i_ambient,
 	 	  intersection[DSPACE], normal[DSPACE],
-	 	  diffuse, specular, shading;
+	 	  diffuse, specular, shading_scaler;
 
-    VECTOR_SCALE(shading_model, material.color, ambient);
+    VECTOR_SCALE(color, material.color, ambient);
 
     //finds the intersection point
     findIntersectionPoint(intersection, ray, distance);
@@ -138,11 +136,11 @@ __device__ void Raytracer_evaluateShadingModel (COLOR * shading_model,
         specular = Raytracer_specular(ray->direction, normal, light_ray.direction,
         	material.specular_power);
 
-        shading = light.i * (material.i_diffuse * diffuse + 
+        shading_scaler = light.i * (material.i_diffuse * diffuse + 
             material.i_specular * specular);
 
-        VECTOR_SCALE(temp, light.color, shading);
-        VECTOR_ADD(shading_model, shading_model, temp);
+        COLOR_SCALE(shading, light.color, shading_scaler);
+        COLOR_ADD(color, color, shading);
 
 	    SKIP_SHADING:
 	    continue;
@@ -166,9 +164,9 @@ __device__ float Raytracer_specular(float * ray, float * n,
 
     // R = −L + 2(N.L)N
     VECTOR_SCALE(r1, l, -1);
-    VECTOR_COPY(r2, n);
+
     temp = VECTOR_DOT(n, l);
-    VECTOR_SCALE(r1, 2 * temp);
+    VECTOR_SCALE(r2, n, 2 * temp);
     VECTOR_ADD(r, r1, r2);
 
     temp = VECTOR_DOT(v, r);

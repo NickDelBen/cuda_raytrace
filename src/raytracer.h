@@ -50,13 +50,13 @@ __device__ void Raytracer_calculatePixelColor (COLOR * color, world_t * d_w,
 
 /******************************
 * Calculates the shading model of each pixel.
-* @param shading_model A pointer that will containe the resultant color.
-* @param d_w           A pointer to the world object.
-* @param i_object      A pointer to the object that is intersected.
-* @param ray           A pointer to a line_t object that has the ray equation.
-* @param distance      The distance between the camera and object.
+* @param color 		A pointer that will containe the resultant color.
+* @param d_w        A pointer to the world object.
+* @param i_object   A pointer to the object that is intersected.
+* @param ray        A pointer to a line_t object that has the ray equation.
+* @param distance   The distance between the camera and object.
 ******************************/
-__device__ void Raytracer_evaluateShadingModel (COLOR * shading_model,
+__device__ void Raytracer_evaluateShadingModel (COLOR * color,
 	world_t  * d_w, object_t * i_object, line_t * ray, float distance);
 
 /******************************

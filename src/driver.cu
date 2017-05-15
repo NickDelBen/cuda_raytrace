@@ -81,8 +81,8 @@ int main(int argc, char ** argv)
 
 	// Begin the main render loop
 	printf("Beginning raytracer loop\n");
-	// Canvas_startLoop(canvas, argc, argv);
-	Raytracer(d_frame, d_rays, h_world, h_camera->width * h_camera->height, BLOCKS, THREADS, MAX_REFLECTIONS);
+	Canvas_startLoop(canvas, argc, argv);
+	// Raytracer(d_frame, d_rays, h_world, h_camera->width * h_camera->height, BLOCKS, THREADS, MAX_REFLECTIONS);
 
 	Canvas_free(canvas);
 	printf("Freed canvas\n");
