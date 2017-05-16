@@ -68,7 +68,7 @@ __global__ void Raytracer_trace (line_t * d_r, COLOR * d_f, world_t * w,
 
     float reflectivity;
     COLOR reflection_color[CHANNELS];
-    for (int i = 1; i < max_reflections; ++i) {
+    for (int i = 0; i < max_reflections; ++i) {
         // Process all the pixels assigned to this thread
         for (int j = t_offset; j < t_offset + t_work; ++j) {
             if (!isnan(reflectivities[j])) {
@@ -99,11 +99,16 @@ __device__ float Raytracer_calculatePixelColor (COLOR * color, world_t * d_w,
     object_t * object = NULL;
 
     for (int i = 0; i < d_w->n_objects; ++i) {
-        temp = Object_intersect(ray, &((d_w->objects)[i]));
+        temp = Object_intersect(ray, &(d_w->objects[i]));
+
+        // if (!(isnan(temp) || temp < 0) && (isnan(distance) || temp < distance)) {
+        //     distance = temp;
+        //     object = &(d_w->objects[i]);
+        // }
 
         if (!isnan(temp) && (isnan(distance) || temp < distance)) {
             distance = temp;
-            object = &((d_w->objects)[i]);
+            object = &(d_w->objects[i]);
         }
     }
 
@@ -133,37 +138,38 @@ __device__ void Raytracer_evaluateShadingModel (COLOR * color,
     Object_normal(normal, i_object, intersection);
 
     line_t shadow_ray;
-    light_t light;
+    light_t * light;
     object_t * object;
     distance = NAN;
     for (int i = 0; i < d_w->n_lights; ++i) {
 
-        light = (d_w->lights)[i];
+        light = &(d_w->lights[i]);
 
         VECTOR_COPY(shadow_ray.position, intersection);
-        VECTOR_SUB(shadow_ray.direction, light.pos, intersection);
+        VECTOR_SUB(shadow_ray.direction, light->pos, intersection);
         Vector_normalize(shadow_ray.direction);
 
         for (int j = 0; j < d_w->n_objects; ++j) {
 
-            object = &((d_w->objects)[i]);
+            object = &(d_w->objects[j]);
 
-            if (object == i_object) {
-                continue;
-            }
+            if (object == i_object) continue;
 
             temp = Object_intersect(&shadow_ray, object);
 
             if (!isnan(temp) && (isnan(distance) || temp < distance)) {
                 distance = temp;
             }
+            // if (!(isnan(temp) || temp < 0) && (isnan(distance) || temp < distance)) {
+            //     distance = temp;
+            // }
         }
 
-        if (!isnan(distance)) {
-            COLOR_SCALE(diffuse, material.color, light.i * material.i_diffuse * 
+        if (isnan(distance) || distance < 0) {
+            COLOR_SCALE(diffuse, material.color, light->i * material.i_diffuse * 
                 Raytracer_diffuse(normal, shadow_ray.direction));
-            COLOR_SCALE(specular, material.color, light.i * material.i_specular *
-                Raytracer_specular(ray->direction,normal,
+            COLOR_SCALE(specular, material.color, light->i * material.i_specular *
+                Raytracer_specular(ray->direction, normal,
                     shadow_ray.direction, material.specular_power))
                     
             COLOR_ADD(color, color, diffuse);
@@ -183,20 +189,17 @@ __device__ float Raytracer_diffuse(float * n, float * l)
 }
 
 __device__ float Raytracer_specular(float * ray, float * n,
-    float * l, float fallout)
+    float * shadow_ray, float fallout)
 {
-    float v[DSPACE], r[DSPACE], r1[DSPACE], r2[DSPACE], 
-          temp;
+    float v[DSPACE], r[DSPACE], r1[DSPACE], r2[DSPACE];
 
     VECTOR_SCALE(v, ray, -1);
 
     // R = −L + 2(N.L)N
-    VECTOR_SCALE(r1, l, -1);
+    VECTOR_SCALE(r1, shadow_ray, -1);
 
-    temp = VECTOR_DOT(n, l);
-    VECTOR_SCALE(r2, n, 2 * temp);
+    VECTOR_SCALE(r2, n, 2 * VECTOR_DOT(n, shadow_ray));
     VECTOR_ADD(r, r1, r2);
 
-    temp = VECTOR_DOT(v, r);
-    return pow(fmax(0, temp), fallout);
+    return pow(fmax(0, VECTOR_DOT(v, r)), fallout);
 }

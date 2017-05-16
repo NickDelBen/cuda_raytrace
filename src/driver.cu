@@ -12,7 +12,7 @@
 #define WINDOW_TITLE "CUDA Raytracer by Nick & Zaid\0"
 #define BLOCKS 512 
 #define THREADS 32
-#define MAX_REFLECTIONS 10
+#define MAX_REFLECTIONS 4
 #define SPEED_FACTOR 0.1
 
 camera_t * h_camera;

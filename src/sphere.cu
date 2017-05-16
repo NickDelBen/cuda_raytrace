@@ -34,11 +34,10 @@ __device__ float Sphere_intersect (line_t * ray, sphere_t * s)
     } else if (d == 0) {
         return -b / 2;
     } else {
-        sqrtd = sqrt(d);
-        return fmin(
-            (-b + sqrtd) / 2,
-            (-b - sqrtd) / 2
-        );
+        sqrtd = sqrtf(d);
+        c = (-b + sqrtd) / 2;
+        d = (-b - sqrtd) / 2;
+        return fabs(c) > fabs(d) ? d : c;
     }
 }
 

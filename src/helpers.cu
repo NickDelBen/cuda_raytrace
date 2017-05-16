@@ -5,8 +5,7 @@
 __device__ void findIntersectionPoint(float * intersection,
     line_t * ray, float distance)
 {
-    VECTOR_COPY(intersection, ray->direction);
-    VECTOR_SCALE(intersection, distance);
+    VECTOR_SCALE(intersection, ray->direction, distance);
     VECTOR_ADD(intersection, intersection, ray->position);
 }
 
@@ -16,8 +15,7 @@ __device__ void findReflectedRay(float * reflected, float * ray,
 {
     float c = 2 * VECTOR_DOT(ray, normal);
 
-    VECTOR_COPY(reflected, normal);
-    VECTOR_SCALE(reflected, c);
-    VECTOR_SUB(reflected, reflected, ray);
-    VECTOR_SCALE(reflected, 1.0 / VECTOR_LENGTH(reflected));
+    VECTOR_SCALE(reflected, normal, c);
+    VECTOR_ADD(reflected, reflected, ray);
+    Vector_normalize(reflected);
 }
