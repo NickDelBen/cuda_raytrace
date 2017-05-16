@@ -122,7 +122,7 @@ __device__ void Raytracer_evaluateShadingModel (COLOR * color,
     material_t material = d_w->materials[i_object->mat];
     float ambient = d_w->global_ambient * material.i_ambient,
           intersection[DSPACE], normal[DSPACE],
-          distance = NAN, temp;
+          temp;
 
     VECTOR_SCALE(color, material.color, ambient);
 
@@ -135,6 +135,7 @@ __device__ void Raytracer_evaluateShadingModel (COLOR * color,
     line_t shadow_ray;
     light_t light;
     object_t * object;
+    distance = NAN;
     for (int i = 0; i < d_w->n_lights; ++i) {
 
         light = (d_w->lights)[i];
