@@ -30,9 +30,9 @@
 * @param c2 Second color
 ******************************/
 #define COLOR_ADD(c, c1, c2) \
-	(c)[R] = max(0, min((c1)[R] + (c2)[R], COLOR_MAX)); \
-	(c)[G] = max(0, min((c1)[G] + (c2)[G], COLOR_MAX)); \
-	(c)[B] = max(0, min((c1)[B] + (c2)[B], COLOR_MAX));
+	(c)[R] = (COLOR)min(((int)(c1)[R] + (int)(c2)[R]), COLOR_MAX); \
+	(c)[G] = (COLOR)min(((int)(c1)[G] + (int)(c2)[G]), COLOR_MAX); \
+	(c)[B] = (COLOR)min(((int)(c1)[B] + (int)(c2)[B]), COLOR_MAX);
 
 /******************************
 * Scales a color by the specified scaler

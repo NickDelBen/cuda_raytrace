@@ -10,66 +10,88 @@ __host__ void CudaCheckError()
     }
 }
 
-void Raytracer(COLOR * d_f, line_t * d_r, world_t * w, int size, int blocks, int threads, int max_reflections)
+void Raytracer(COLOR * d_f, line_t * d_r, world_t * w, int size, int blocks,
+    int threads, int max_reflections)
 {
-	int b_work   = size / blocks,
-		t_work   = b_work / threads,
+    int b_work   = size / blocks,
+        t_work   = b_work / threads,
         r_size   = sizeof(line_t) * size,
         b_r_size = sizeof(line_t) * b_work,
-		b_f_size = sizeof(COLOR) * CHANNELS * b_work,
+        b_f_size = sizeof(COLOR) * CHANNELS * b_work,
+        b_b_size = sizeof(float) * b_work,
         b_w_size = 0;
 
-	// Copy animated world to device.
-	world_t * d_w = World_toDevice(w, &b_w_size);
+    // Copy animated world to device.
+    world_t * d_w = World_toDevice(w, &b_w_size);
 
-	line_t * rays;
-	cudaMalloc(&rays, r_size);
-	cudaMemcpy(rays, d_r, r_size, cudaMemcpyDeviceToDevice);
+    line_t * rays;
+    cudaMalloc(&rays, r_size);
+    cudaMemcpy(rays, d_r, r_size, cudaMemcpyDeviceToDevice);
 
-	// Traces rays bounces.
-	// for (int i = 0; i < max_reflections; ++i) {
-		Raytracer_trace<<<blocks, threads, b_r_size + b_f_size + b_w_size>>>(rays, d_f, d_w, b_w_size, b_work, t_work);
-        CudaCheckError();
-        cudaDeviceSynchronize();
-	// }
-
-	// Frees world from device memory.
-	World_freeDevice(d_w);
+    printf("Allocating %d bytes per block\n",
+        b_r_size + b_f_size + b_w_size + b_b_size);
+    Raytracer_trace<<<blocks, threads, b_r_size + b_f_size + b_w_size + b_b_size>>>
+        (rays, d_f, d_w, b_w_size, b_work, t_work, max_reflections);
+    CudaCheckError();
+    cudaDeviceSynchronize();
+        
+    World_freeDevice(d_w);
 
     cudaFree(rays);
 }
 
-__global__ void Raytracer_trace (line_t * d_r, COLOR * d_f, world_t * w, int w_size, int b_work, int t_work)
+__global__ void Raytracer_trace (line_t * d_r, COLOR * d_f, world_t * w,
+    int w_size, int b_work, int t_work, int max_reflections)
 {
-	int t_offset = threadIdx.x * t_work,
-		offset   = blockIdx.x * b_work + t_offset;
+    int t_offset = threadIdx.x * t_work,
+        offset   = blockIdx.x * b_work + t_offset;
 
-	// ** Add world to shared memory for faster access time ** //
-	extern __shared__ uint8_t smem[];
+    // ** Add world to shared memory for faster access time ** //
+    extern __shared__ uint8_t smem[];
 
-	// Assign shared memory locations to the world, rays array and frame array.
+    // Assign shared memory locations to the world, rays array and frame array.
     world_t * d_w = World_toShared((void *) smem, w);
-	line_t  * rays = (line_t *)(smem + w_size);
-	COLOR   * frame = (COLOR *)&rays[b_work];
+    line_t  * rays = (line_t *)(smem + w_size);
+    COLOR   * frame = (COLOR *)&rays[b_work];
+    float   * reflectivities = (float *)&frame[b_work * CHANNELS];
 
-	// Copy from global memory to shared memory.
-	memcpy(&rays[t_offset], &d_r[offset], sizeof(line_t) * t_work);
-	memcpy(&frame[t_offset * CHANNELS], &d_f[offset * CHANNELS],
+    // Copy from global memory to shared memory.
+    memcpy(&rays[t_offset], &d_r[offset], sizeof(line_t) * t_work);
+    memcpy(&frame[t_offset * CHANNELS], &d_f[offset * CHANNELS],
         sizeof(COLOR) * CHANNELS * t_work);
 
-	// Process all the pixels assigned to this thread
-	for (int i = t_offset; i < t_offset + t_work; ++i) {
-		Raytracer_calculatePixelColor(&frame[i * CHANNELS], d_w, &rays[i]);
-	}
+    // Process all the pixels assigned to this thread
+    for (int i = t_offset; i < t_offset + t_work; ++i) {
+        reflectivities[i] = Raytracer_calculatePixelColor(&frame[i * CHANNELS],
+            d_w, &rays[i]);
+    }
 
-	// Copy the results of the trace on the frame tile to the global memory.
-	memcpy(&d_r[offset], &rays[t_offset], sizeof(line_t) * t_work);
-	memcpy(&d_f[offset * CHANNELS], &frame[t_offset * CHANNELS],
+    float reflectivity;
+    COLOR reflection_color[CHANNELS];
+    for (int i = 1; i < max_reflections; ++i) {
+        // Process all the pixels assigned to this thread
+        for (int j = t_offset; j < t_offset + t_work; ++j) {
+
+            if (!isnan(reflectivities[j])) {
+                reflectivity = Raytracer_calculatePixelColor(reflection_color,
+                    d_w, &rays[j]);
+
+                COLOR_SCALE(reflection_color, reflectivities[j]);
+                COLOR_ADD(&frame[i * CHANNELS], &frame[i * CHANNELS], reflection_color);
+
+                reflectivities[j] = reflectivity;
+            }
+        }
+    }
+
+    // Copy the results of the trace on the frame tile to the global memory.
+    memcpy(&d_r[offset], &rays[t_offset], sizeof(line_t) * t_work);
+    memcpy(&d_f[offset * CHANNELS], &frame[t_offset * CHANNELS],
         sizeof(COLOR) * CHANNELS * t_work);
 }
 
-__device__ void Raytracer_calculatePixelColor (COLOR * color, world_t * d_w,
-	line_t * ray)
+__device__ float Raytracer_calculatePixelColor (COLOR * color, world_t * d_w,
+    line_t * ray)
 {
     //sets the pixel color to the default background color
     COLOR_COPY(color, d_w->bg);
@@ -78,82 +100,80 @@ __device__ void Raytracer_calculatePixelColor (COLOR * color, world_t * d_w,
     object_t * object = NULL;
 
     for (int i = 0; i < d_w->n_objects; ++i) {
-    	temp = Object_intersect(ray, &((d_w->objects)[i]));
+        temp = Object_intersect(ray, &((d_w->objects)[i]));
 
-    	if (!isnan(temp) && (isnan(distance) || temp < distance)) {
-    		distance = temp;
-    		object = &((d_w->objects)[i]);
-    	}
+        if (!isnan(temp) && (isnan(distance) || temp < distance)) {
+            distance = temp;
+            object = &((d_w->objects)[i]);
+        }
     }
 
     if (object != NULL) {
-    	Raytracer_evaluateShadingModel(color, d_w, object, ray, distance);
+        Raytracer_evaluateShadingModel(color, d_w, object, ray, distance);
+        return d_w->materials[object->mat].reflectivity;
     }
+
+    return NAN;
 }
 
 __device__ void Raytracer_evaluateShadingModel (COLOR * color,
-	world_t  * d_w, object_t * i_object, line_t * ray, float distance)
+    world_t  * d_w, object_t * i_object, line_t * ray, float distance)
 {
     COLOR shading[CHANNELS];
-	material_t material = d_w->materials[i_object->mat];
-	float ambient = d_w->global_ambient * material.i_ambient,
-	 	  intersection[DSPACE], normal[DSPACE],
-	 	  diffuse, specular, shading_scaler, s_r;
+    material_t material = d_w->materials[i_object->mat];
+    float ambient = d_w->global_ambient * material.i_ambient,
+          intersection[DSPACE], normal[DSPACE],
+          diffuse, specular, shading_scaler;
 
     VECTOR_SCALE(color, material.color, ambient);
 
     //finds the intersection point
     findIntersectionPoint(intersection, ray, distance);
 
-    line_t light_ray, reflection_ray;
+    //retrieves the normal at the point of intersection
+    Object_normal(normal, i_object, intersection);
+
+    line_t light_ray;
     light_t light;
     object_t * object;
     for (int i = 0; i < d_w->n_lights; ++i) {
 
-    	light = (d_w->lights)[i];
+        light = (d_w->lights)[i];
 
-    	VECTOR_COPY(light_ray.position, intersection);
-    	VECTOR_SUB(light_ray.direction, light.pos, intersection);
-		Vector_normalize(light_ray.direction);
+        VECTOR_COPY(light_ray.position, intersection);
+        VECTOR_SUB(light_ray.direction, light.pos, intersection);
+        Vector_normalize(light_ray.direction);
 
-    	for (int j = 0; j < d_w->n_objects; ++j) {
+        for (int j = 0; j < d_w->n_objects; ++j) {
 
-    		object = &((d_w->objects)[i]);
+            object = &((d_w->objects)[i]);
 
-    		if (object == i_object) {
-    			continue;
-    		}
+            if (object == i_object) {
+                continue;
+            }
 
-    		if (Object_intersect(&light_ray, object) > -1) {
-    			goto SKIP_SHADING;
-    		}
-    	}
-
-        //retrieves the normal at the point of intersection
-        Object_normal(normal, object, intersection);
-
-        VECTOR_COPY(reflection_ray.position, intersection);
-        findReflectedRay(reflection_ray.direction, ray->direction, normal);
+            if (Object_intersect(&light_ray, object) > -1) {
+                goto SKIP_SHADING;
+            }
+        }
 
         //computes the shading
         diffuse = Raytracer_diffuse(normal, light_ray.direction);
         specular = Raytracer_specular(ray->direction, normal, light_ray.direction,
-        	material.specular_power);
+            material.specular_power);
 
         shading_scaler = light.i * (material.i_diffuse * diffuse + 
             material.i_specular * specular);
 
-        // for (int c_i = 0; c_i < CHANNELS; c_i++) {
-        //     float s_r = (((float) light.color[c_i]) * shading_scaler) + ((float) color[c_i]);
-        //     color[c_i] = s_r > 255 ? 255 : s_r;
-        // }
-
         COLOR_SCALE(shading, light.color, shading_scaler);
         COLOR_ADD(color, color, shading);
 
-	    SKIP_SHADING:
-	    continue;
+        SKIP_SHADING:
+        continue;
     }
+
+    VECTOR_COPY(ray->position, intersection);
+    findReflectedRay(ray->direction, ray->direction, normal);
 }
 
 __device__ float Raytracer_diffuse(float * n, float * l)
@@ -167,7 +187,7 @@ __device__ float Raytracer_specular(float * ray, float * n,
     float * l, float fallout)
 {
     float v[DSPACE], r[DSPACE], r1[DSPACE], r2[DSPACE], 
-    	  temp;
+          temp;
 
     VECTOR_SCALE(v, ray, -1);
 

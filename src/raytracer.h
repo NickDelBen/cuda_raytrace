@@ -29,15 +29,17 @@ void Raytracer(COLOR * d_f, line_t * d_r, world_t * w, int size,
 
 /******************************
 * Traces the rays from the eye position into the scene.
-* @param d_r    A pointer to the camera rays on the device.
-* @param d_f    Frame memory location for storing the frame on the device.
-* @param w      A pointer to the world object.
-* @param w_size The size of the world.
-* @param b_work The amount of work each block will do.
-* @param t_work The amount of work each thread will do.
+* @param d_r    			A pointer to the camera rays on the device.
+* @param d_f    			Frame memory location for storing the frame on the
+* 							device.
+* @param w      			A pointer to the world object.
+* @param w_size 			The size of the world.
+* @param b_work 			The amount of work each block will do.
+* @param t_work 			The amount of work each thread will do.
+* @param max_reflections 	The number of possible bounces for a light ray.
 ******************************/
 __global__ void Raytracer_trace (line_t * d_r, COLOR * d_f, world_t * w,
-	int w_size, int b_work, int t_work);
+	int w_size, int b_work, int t_work, int max_reflections);
 
 /******************************
 * Calculates the color of each pixel.
@@ -45,7 +47,7 @@ __global__ void Raytracer_trace (line_t * d_r, COLOR * d_f, world_t * w,
 * @param w     A pointer to the world object.
 * @param ray   A pointer to a line_t object that has the ray equation.
 ******************************/
-__device__ void Raytracer_calculatePixelColor (COLOR * color, world_t * d_w,
+__device__  float Raytracer_calculatePixelColor (COLOR * color, world_t * d_w,
 	line_t * ray);
 
 /******************************

@@ -10,8 +10,8 @@
 #include "sphere.h"
 
 #define WINDOW_TITLE "CUDA Raytracer by Nick & Zaid\0"
-#define BLOCKS 256 
-#define THREADS 64
+#define BLOCKS 512 
+#define THREADS 32
 #define MAX_REFLECTIONS 10
 #define SPEED_FACTOR 0.1
 
