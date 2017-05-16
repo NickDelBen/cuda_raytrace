@@ -28,11 +28,11 @@ void Raytracer(COLOR * d_f, line_t * d_r, world_t * w, int size, int blocks,
     cudaMalloc(&rays, r_size);
     cudaMemcpy(rays, d_r, r_size, cudaMemcpyDeviceToDevice);
 
-    printf("Allocating %d bytes per block\n",
-        b_r_size + b_f_size + b_w_size + b_b_size);
+    // printf("Allocating %d bytes per block\n",
+    //     b_r_size + b_f_size + b_w_size + b_b_size);
     Raytracer_trace<<<blocks, threads, b_r_size + b_f_size + b_w_size + b_b_size>>>
         (rays, d_f, d_w, b_w_size, b_work, t_work, max_reflections);
-    CudaCheckError();
+    // CudaCheckError();
     cudaDeviceSynchronize();
         
     World_freeDevice(d_w);
@@ -71,13 +71,12 @@ __global__ void Raytracer_trace (line_t * d_r, COLOR * d_f, world_t * w,
     for (int i = 1; i < max_reflections; ++i) {
         // Process all the pixels assigned to this thread
         for (int j = t_offset; j < t_offset + t_work; ++j) {
-
             if (!isnan(reflectivities[j])) {
                 reflectivity = Raytracer_calculatePixelColor(reflection_color,
                     d_w, &rays[j]);
 
                 COLOR_SCALE(reflection_color, reflectivities[j]);
-                COLOR_ADD(&frame[i * CHANNELS], &frame[i * CHANNELS], reflection_color);
+                COLOR_ADD(&frame[j * CHANNELS], &frame[j * CHANNELS], reflection_color);
 
                 reflectivities[j] = reflectivity;
             }
@@ -119,7 +118,6 @@ __device__ float Raytracer_calculatePixelColor (COLOR * color, world_t * d_w,
 __device__ void Raytracer_evaluateShadingModel (COLOR * color,
     world_t  * d_w, object_t * i_object, line_t * ray, float distance)
 {
-    COLOR shading[CHANNELS];
     material_t material = d_w->materials[i_object->mat];
     float ambient = d_w->global_ambient * material.i_ambient,
           intersection[DSPACE], normal[DSPACE],
@@ -165,8 +163,10 @@ __device__ void Raytracer_evaluateShadingModel (COLOR * color,
         shading_scaler = light.i * (material.i_diffuse * diffuse + 
             material.i_specular * specular);
 
-        COLOR_SCALE(shading, light.color, shading_scaler);
-        COLOR_ADD(color, color, shading);
+        for (int c_i = 0; c_i < CHANNELS; c_i++) {
+            float s_r = (((float) light.color[c_i]) * shading_scaler) + ((float) color[c_i]);
+            color[c_i] = s_r > 255 ? 255 : s_r;
+        }
 
         SKIP_SHADING:
         continue;
