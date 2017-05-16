@@ -10,11 +10,13 @@ camera_t * Camera_read (FILE * file)
 		"(%f, %f, %f), "
 		"(%f, %f, %f), "
 		"(%f, %f, %f), "
-		"(%f, %f, %f)\n",
+		"(%f, %f, %f), "
+		"[%f, %f, %f]\n",
 		&(result->bottom_left[X]), &(result->bottom_left[Y]), &(result->bottom_left[Z]),
 		&(result->top_left[X]), &(result->top_left[Y]), &(result->top_left[Z]),
 		&(result->top_right[X]), &(result->top_right[Y]), &(result->top_right[Z]), 
-		&(result->bottom_right[X]), &(result->bottom_right[Y]), &(result->bottom_right[Z]));
+		&(result->bottom_right[X]), &(result->bottom_right[Y]), &(result->bottom_right[Z]),
+		&(result->eye[X]), &(result->eye[Y]), &(result->eye[Z]));
 
 	// Get the direction vectors between the corners
 	VECTOR_SUB(result->comp_vert, result->top_left, result->bottom_left);
@@ -64,7 +66,9 @@ __global__ void Camera_createRays (camera_t * d_camera, line_t * rays)
 		VECTOR_SCALE_3(horiz, d_camera->comp_horiz, x);	
 		// Add the components to get true position
 		VECTOR_ADD(cur->position, vert, horiz);
-		VECTOR_COPY(cur->direction, d_camera->normal);
+		// Calculate the direction of the ray
+		VECTOR_SUB(cur->direction, cur->position, d_camera->eye);
+		Vector_normalize(cur->direction);
 		++pixels;
 	}
 }

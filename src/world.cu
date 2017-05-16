@@ -76,19 +76,20 @@ world_t * World_toDevice (world_t * source, int * size)
 // Copies the specified world to the device's shared memory
 __device__ world_t * World_toShared (void * smem, world_t * source)
 {
+	uint8_t * world_bytes = (uint8_t *) smem;
 	int w_size = sizeof(world_t),
 		l_size = sizeof(light_t) * source->n_lights,
 		m_size = sizeof(material_t) * source->n_materials,
 		o_size = sizeof(object_t) * source->n_objects;
 
-	world_t * result = (world_t *)smem;
+	world_t * result = (world_t *) world_bytes;
 
-	memcpy(smem, source, w_size);
+	memcpy(world_bytes, source, w_size);
 
 	// Set memory addresses
-	result->lights = (light_t *)(smem + w_size);
-	result->materials = (material_t *)(result->lights + l_size);
-	result->objects = (object_t *)(result->materials + m_size);
+	result->lights = (light_t *)(world_bytes + w_size);
+	result->materials = (material_t *)(world_bytes + w_size + l_size);
+	result->objects = (object_t *)(world_bytes + w_size + l_size + m_size);
 
 	// Copy the world object data to the device
 	memcpy(result->lights, source->lights, l_size);

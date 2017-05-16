@@ -7,11 +7,13 @@
 #include "line.h"
 #include "raytracer.h"
 #include "canvas.h"
+#include "sphere.h"
 
 #define WINDOW_TITLE "CUDA Raytracer by Nick & Zaid\0"
 #define BLOCKS 256 
 #define THREADS 64
 #define MAX_REFLECTIONS 10
+#define SPEED_FACTOR 0.1
 
 camera_t * h_camera;
 COLOR    * d_frame;
@@ -19,6 +21,30 @@ canvas_t * canvas;
 line_t   * d_rays;
 camera_t * d_camera;
 world_t  * h_world;
+float    * sphere_speeds;
+
+int glo_itr;
+
+void do_work();
+void animate_spheres();
+
+void animate_spheres()
+{
+	int sphere_itr;
+	sphere_t * s;
+	float future;
+
+	for (sphere_itr = 0; sphere_itr < h_world->n_objects; sphere_itr++) {
+		s = &(h_world->objects[sphere_itr].sphere);
+		future = s->center[1] + sphere_speeds[sphere_itr] + (sphere_speeds[sphere_itr] < 0 ? -(s->radius) : s->radius);
+		if (future < 10 || future > (h_camera->height - 10)) {
+			sphere_speeds[sphere_itr] *= -1;
+		}
+		s->center[1] += sphere_speeds[sphere_itr];
+	}
+
+	printf("Iteration: %d\n", ++glo_itr);
+}
 
 void do_work()
 {
@@ -29,14 +55,14 @@ void do_work()
 	// Copy the raytraced frame back to the host
 	cudaMemcpy(canvas->pixels, d_frame, sizeof(COLOR) * CHANNELS * h_camera->width * h_camera->height, cudaMemcpyDeviceToHost);
 	cudaDeviceSynchronize();
-
-	// animate(w);
 	clock_t tock = clock();
 	sprintf(canvas->message, "FPS: %.2lf\n", 1.0 / ((double)(tock - tick) / CLOCKS_PER_SEC));
+	animate_spheres();
 }
 
 int main(int argc, char ** argv)
 {
+	glo_itr = 0;
 	if (argc != 2) {
 		printf("Please provide the scene file path as an argument.\n");
 		return EXIT_FAILURE;
@@ -77,8 +103,14 @@ int main(int argc, char ** argv)
 	free(title);
 	printf("Created canvas\n");
 
-	Canvas_setRenderFunction(canvas, do_work, 1000);
+	Canvas_setRenderFunction(canvas, do_work, 1);
 	printf("Set canvas render function\n");
+
+	// Allocate space for he sphere animations
+	sphere_speeds = (float *) malloc(sizeof(float) * h_world->n_objects);
+	for (int sphere_itr = 0; sphere_itr < h_world->n_objects; sphere_itr++) {
+		sphere_speeds[sphere_itr] = SPEED_FACTOR * ((float) (h_world->objects[sphere_itr].sphere.radius));
+	}
 
 	// Begin the main render loop
 	printf("Beginning raytracer loop\n");
@@ -102,6 +134,8 @@ int main(int argc, char ** argv)
 
 	World_freeHost(h_world);
 	printf("Freed world on host\n");
+
+	free(sphere_speeds);
 
 	return EXIT_SUCCESS;
 }

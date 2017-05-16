@@ -35,6 +35,8 @@ void Raytracer(COLOR * d_f, line_t * d_r, world_t * w, int size, int blocks, int
 
 	// Frees world from device memory.
 	World_freeDevice(d_w);
+
+    cudaFree(rays);
 }
 
 __global__ void Raytracer_trace (line_t * d_r, COLOR * d_f, world_t * w, int w_size, int b_work, int t_work)
@@ -46,7 +48,7 @@ __global__ void Raytracer_trace (line_t * d_r, COLOR * d_f, world_t * w, int w_s
 	extern __shared__ uint8_t smem[];
 
 	// Assign shared memory locations to the world, rays array and frame array.
-    // world_t * d_w = World_toShared((void *) smem, w);
+    world_t * d_w = World_toShared((void *) smem, w);
 	line_t  * rays = (line_t *)(smem + w_size);
 	COLOR   * frame = (COLOR *)&rays[b_work];
 
@@ -57,7 +59,7 @@ __global__ void Raytracer_trace (line_t * d_r, COLOR * d_f, world_t * w, int w_s
 
 	// Process all the pixels assigned to this thread
 	for (int i = t_offset; i < t_offset + t_work; ++i) {
-		Raytracer_calculatePixelColor(&frame[i * CHANNELS], w, &rays[i]);
+		Raytracer_calculatePixelColor(&frame[i * CHANNELS], d_w, &rays[i]);
 	}
 
 	// Copy the results of the trace on the frame tile to the global memory.
@@ -96,7 +98,7 @@ __device__ void Raytracer_evaluateShadingModel (COLOR * color,
 	material_t material = d_w->materials[i_object->mat];
 	float ambient = d_w->global_ambient * material.i_ambient,
 	 	  intersection[DSPACE], normal[DSPACE],
-	 	  diffuse, specular, shading_scaler;
+	 	  diffuse, specular, shading_scaler, s_r;
 
     VECTOR_SCALE(color, material.color, ambient);
 
@@ -140,6 +142,11 @@ __device__ void Raytracer_evaluateShadingModel (COLOR * color,
 
         shading_scaler = light.i * (material.i_diffuse * diffuse + 
             material.i_specular * specular);
+
+        // for (int c_i = 0; c_i < CHANNELS; c_i++) {
+        //     float s_r = (((float) light.color[c_i]) * shading_scaler) + ((float) color[c_i]);
+        //     color[c_i] = s_r > 255 ? 255 : s_r;
+        // }
 
         COLOR_SCALE(shading, light.color, shading_scaler);
         COLOR_ADD(color, color, shading);

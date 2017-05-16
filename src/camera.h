@@ -23,6 +23,7 @@ typedef struct camera_t {
 	float comp_vert[DSPACE];    // Vertical unit component of imaging plane
 	float comp_horiz[DSPACE];   // Horizontal component of imaging plane
 	float normal[DSPACE];       // Normal to imaging plane
+	float eye[DSPACE];          // Eye position of the camera
 } camera_t;
 
 /******************************

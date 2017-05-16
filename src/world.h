@@ -4,6 +4,7 @@
 #ifndef _h_world
 #define _h_world
 
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

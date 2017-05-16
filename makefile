@@ -109,7 +109,7 @@ vector3.o: $(DS)/vector3.cu
 
 camera.o: $(DS)/camera.cu
 	# Compiling camera object
-	$(cc) $(FO) -o $(DO)/$@ $^
+	$(cc) $(FO) $(LC) -o $(DO)/$@ $^
 
 raytracer.o: $(DS)/raytracer.cu
 	# Compiling raytracer object
