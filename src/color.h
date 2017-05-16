@@ -30,9 +30,9 @@
 * @param c2 Second color
 ******************************/
 #define COLOR_ADD(c, c1, c2) \
-	(c)[R] = (COLOR)fmin(((int)(c1)[R] + (int)(c2)[R]), COLOR_MAX); \
-	(c)[G] = (COLOR)fmin(((int)(c1)[G] + (int)(c2)[G]), COLOR_MAX); \
-	(c)[B] = (COLOR)fmin(((int)(c1)[B] + (int)(c2)[B]), COLOR_MAX);
+	(c)[R] = (COLOR)min(((int)(c1)[R] + (int)(c2)[R]), COLOR_MAX); \
+	(c)[G] = (COLOR)min(((int)(c1)[G] + (int)(c2)[G]), COLOR_MAX); \
+	(c)[B] = (COLOR)min(((int)(c1)[B] + (int)(c2)[B]), COLOR_MAX);
 
 /******************************
 * Scales a color by the specified scaler
@@ -51,9 +51,9 @@
 * @param n Amount so scale color by
 ******************************/
 #define COLOR_SCALE_3(c, c1, n)  								   \
-	(c)[R] = (COLOR)min((float)((c1)[R]) * (n), (float)COLOR_MAX); \
-	(c)[G] = (COLOR)min((float)((c1)[G]) * (n), (float)COLOR_MAX); \
-	(c)[B] = (COLOR)min((float)((c1)[B]) * (n), (float)COLOR_MAX);
+	(c)[R] = (COLOR)fmin((float)((c1)[R]) * (n), (float)COLOR_MAX); \
+	(c)[G] = (COLOR)fmin((float)((c1)[G]) * (n), (float)COLOR_MAX); \
+	(c)[B] = (COLOR)fmin((float)((c1)[B]) * (n), (float)COLOR_MAX);
 
 /******************************
 * VECTOR_SCALE helper.

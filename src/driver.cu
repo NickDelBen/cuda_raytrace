@@ -23,7 +23,6 @@ camera_t * d_camera;
 world_t  * h_world;
 float    * sphere_speeds;
 
-int glo_itr;
 
 void do_work();
 void animate_spheres();
@@ -35,6 +34,9 @@ void animate_spheres()
 	float future;
 
 	for (sphere_itr = 0; sphere_itr < h_world->n_objects; sphere_itr++) {
+		if (h_world->objects[sphere_itr].type == TRIANGLE) {
+			continue;
+		}
 		s = &(h_world->objects[sphere_itr].sphere);
 		future = s->center[1] + sphere_speeds[sphere_itr] + (sphere_speeds[sphere_itr] < 0 ? -(s->radius) : s->radius);
 		if (future < 10 || future > (h_camera->height - 10)) {
@@ -42,8 +44,6 @@ void animate_spheres()
 		}
 		s->center[1] += sphere_speeds[sphere_itr];
 	}
-
-	printf("Iteration: %d\n", ++glo_itr);
 }
 
 void do_work()
@@ -62,7 +62,6 @@ void do_work()
 
 int main(int argc, char ** argv)
 {
-	glo_itr = 0;
 	if (argc != 2) {
 		printf("Please provide the scene file path as an argument.\n");
 		return EXIT_FAILURE;
