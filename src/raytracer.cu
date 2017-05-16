@@ -122,7 +122,8 @@ __device__ void Raytracer_evaluateShadingModel (COLOR * color,
     COLOR diffuse[CHANNELS], specular[CHANNELS], shading[CHANNELS];
     material_t material = d_w->materials[i_object->mat];
     float ambient = d_w->global_ambient * material.i_ambient,
-          intersection[DSPACE], normal[DSPACE], shading_scaler;
+          intersection[DSPACE], normal[DSPACE],
+          distance = NAN, temp;
 
     VECTOR_SCALE(color, material.color, ambient);
 
@@ -132,16 +133,16 @@ __device__ void Raytracer_evaluateShadingModel (COLOR * color,
     //retrieves the normal at the point of intersection
     Object_normal(normal, i_object, intersection);
 
-    line_t light_ray;
+    line_t shadow_ray;
     light_t light;
     object_t * object;
     for (int i = 0; i < d_w->n_lights; ++i) {
 
         light = (d_w->lights)[i];
 
-        VECTOR_COPY(light_ray.position, intersection);
-        VECTOR_SUB(light_ray.direction, light.pos, intersection);
-        Vector_normalize(light_ray.direction);
+        VECTOR_COPY(shadow_ray.position, intersection);
+        VECTOR_SUB(shadow_ray.direction, light.pos, intersection);
+        Vector_normalize(shadow_ray.direction);
 
         for (int j = 0; j < d_w->n_objects; ++j) {
 
@@ -151,21 +152,23 @@ __device__ void Raytracer_evaluateShadingModel (COLOR * color,
                 continue;
             }
 
-            if (isnan(Object_intersect(&light_ray, object))) {
-                COLOR_SCALE(diffuse, material.color, light.i * material.i_diffuse *
-                    Raytracer_diffuse(normal, light_ray.direction));
-                COLOR_SCALE(specular, material.color, light.i * material.i_specular *
-                    Raytracer_specular(ray->direction,normal,
-                        light_ray.direction, material.specular_power))
-                
-                COLOR_ADD(color, color, diffuse);
-                COLOR_ADD(color, color, specular);
+            temp = Object_intersect(&shadow_ray, object);
+
+            if (!isnan(temp) && (isnan(distance) || temp < distance)) {
+                distance = temp;
             }
         }
 
-        COLOR_SCALE(shading, light.color, shading_scaler);
-        COLOR_ADD(color, color, shading);
-        continue;
+        if (!isnan(distance)) {
+            COLOR_SCALE(diffuse, material.color, light.i * material.i_diffuse * 
+                Raytracer_diffuse(normal, shadow_ray.direction));
+            COLOR_SCALE(specular, material.color, light.i * material.i_specular *
+                Raytracer_specular(ray->direction,normal,
+                    shadow_ray.direction, material.specular_power))
+                    
+            COLOR_ADD(color, color, diffuse);
+            COLOR_ADD(color, color, specular);
+        }
     }
 
     VECTOR_COPY(ray->position, intersection);
