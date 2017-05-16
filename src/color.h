@@ -36,9 +36,35 @@
 
 /******************************
 * Scales a color by the specified scaler
+* @param u color to scale
+* @param n Amount so scale color by
+******************************/
+#define COLOR_SCALE_2(c, n)  								\
+	(c)[R] = (COLOR)min((float)((c)[R]) * (n), COLOR_MAX);  \
+	(c)[G] = (COLOR)min((float)((c)[G]) * (n), COLOR_MAX);  \
+	(c)[B] = (COLOR)min((float)((c)[B]) * (n), COLOR_MAX);
+
+/******************************
+* Scales a color by the specified scaler
+* @param c color to save result in
+* @param c1 color to scale
+* @param n Amount so scale color by
+******************************/
+#define COLOR_SCALE_3(c, c1, n)  							\
+	(c)[R] = (COLOR)min((float)((c1)[R]) * (n), COLOR_MAX); \
+	(c)[G] = (COLOR)min((float)((c1)[G]) * (n), COLOR_MAX); \
+	(c)[B] = (COLOR)min((float)((c1)[B]) * (n), COLOR_MAX);
+
+/******************************
+* VECTOR_SCALE helper.
+******************************/
+#define COLOR_SCALE_SELECTOR(_1, _2, _3, NAME, ...) NAME
+
+/******************************
+* Scales a vector by the specified scaler
 ******************************/
 #define COLOR_SCALE(...)					\
-	VECTOR_SCALE_SELECTOR 					\
-	(__VA_ARGS__, VECTOR_SCALE_3, VECTOR_SCALE_2)(__VA_ARGS__)
+	COLOR_SCALE_SELECTOR 					\
+	(__VA_ARGS__, COLOR_SCALE_3, COLOR_SCALE_2)(__VA_ARGS__)
 
 #endif
