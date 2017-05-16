@@ -118,7 +118,7 @@ __device__ float Raytracer_calculatePixelColor (COLOR * color, world_t * d_w,
 __device__ void Raytracer_evaluateShadingModel (COLOR * color,
     world_t  * d_w, object_t * i_object, line_t * ray, float distance)
 {
-    COLOR diffuse[CHANNELS], specular[CHANNELS], shading[CHANNELS];
+    COLOR diffuse[CHANNELS], specular[CHANNELS];
     material_t material = d_w->materials[i_object->mat];
     float ambient = d_w->global_ambient * material.i_ambient,
           intersection[DSPACE], normal[DSPACE], shading_scaler;
