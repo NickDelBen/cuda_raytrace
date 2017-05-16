@@ -119,11 +119,10 @@ __device__ float Raytracer_calculatePixelColor (COLOR * color, world_t * d_w,
 __device__ void Raytracer_evaluateShadingModel (COLOR * color,
     world_t  * d_w, object_t * i_object, line_t * ray, float distance)
 {
-    COLOR shading[CHANNELS];
+    COLOR diffuse[CHANNELS], specular[CHANNELS], shading[CHANNELS];
     material_t material = d_w->materials[i_object->mat];
     float ambient = d_w->global_ambient * material.i_ambient,
-          intersection[DSPACE], normal[DSPACE],
-          diffuse, specular, shading_scaler;
+          intersection[DSPACE], normal[DSPACE], shading_scaler;
 
     VECTOR_SCALE(color, material.color, ambient);
 
@@ -152,23 +151,20 @@ __device__ void Raytracer_evaluateShadingModel (COLOR * color,
                 continue;
             }
 
-            if (Object_intersect(&light_ray, object) > -1) {
-                goto SKIP_SHADING;
+            if (isnan(Object_intersect(&light_ray, object))) {
+                COLOR_SCALE(diffuse, material.color, light.i * material.i_diffuse *
+                    Raytracer_diffuse(normal, light_ray.direction));
+                COLOR_SCALE(specular, material.color, light.i * material.i_specular *
+                    Raytracer_specular(ray->direction,normal,
+                        light_ray.direction, material.specular_power))
+                
+                COLOR_ADD(color, color, diffuse);
+                COLOR_ADD(color, color, specular);
             }
         }
 
-        //computes the shading
-        diffuse = Raytracer_diffuse(normal, light_ray.direction);
-        specular = Raytracer_specular(ray->direction, normal, light_ray.direction,
-            material.specular_power);
-
-        shading_scaler = light.i * (material.i_diffuse * diffuse + 
-            material.i_specular * specular);
-
         COLOR_SCALE(shading, light.color, shading_scaler);
         COLOR_ADD(color, color, shading);
-
-        SKIP_SHADING:
         continue;
     }
 
