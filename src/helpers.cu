@@ -13,7 +13,7 @@ __device__ void findIntersectionPoint(float * intersection,
 __device__ void findReflectedRay(float * reflected, float * ray,
     float * normal)
 {
-    float c = 2 * VECTOR_DOT(ray, normal);
+    float c = fabs(2 * VECTOR_DOT(ray, normal));
 
     VECTOR_SCALE(reflected, normal, c);
     VECTOR_ADD(reflected, reflected, ray);

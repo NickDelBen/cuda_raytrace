@@ -52,7 +52,8 @@ __global__ void Raytracer_trace (line_t * d_r, COLOR * d_f,
 
     // Process all the pixels assigned to this thread
     for (int i = t_offset; i < t_offset + t_work; ++i) {
-        reflectivities[i] = Raytracer_calculatePixelColor(&frame[i * CHANNELS], d_w, &rays[i]);
+        reflectivities[i] = Raytracer_calculatePixelColor(&frame[i * CHANNELS],
+            d_w, &rays[i]);
     }
 
     float reflectivity;
@@ -65,7 +66,8 @@ __global__ void Raytracer_trace (line_t * d_r, COLOR * d_f,
                     d_w, &rays[j]);
 
                 COLOR_SCALE(reflection_color, reflectivities[j]);
-                COLOR_ADD(&frame[j * CHANNELS], &frame[j * CHANNELS], reflection_color);
+                COLOR_ADD(&frame[j * CHANNELS], &frame[j * CHANNELS],
+                    reflection_color);
 
                 if(!isnan(reflectivity)) {
                     reflectivities[j] *= reflectivity;
@@ -113,8 +115,8 @@ __device__ void Raytracer_evaluateShadingModel (COLOR * color,
     COLOR diffuse[CHANNELS], specular[CHANNELS];
     material_t material = d_w->materials[i_object->mat];
     float ambient = d_w->global_ambient * material.i_ambient,
-          intersection[DSPACE], normal[DSPACE],
-          temp;
+          intersection[DSPACE], normal[DSPACE];
+    unsigned char shadow;
 
     VECTOR_SCALE(color, material.color, ambient);
 
@@ -127,7 +129,6 @@ __device__ void Raytracer_evaluateShadingModel (COLOR * color,
     line_t shadow_ray;
     light_t * light;
     object_t * object;
-    distance = NAN;
     for (int i = 0; i < d_w->n_lights; ++i) {
 
         light = &(d_w->lights[i]);
@@ -136,23 +137,22 @@ __device__ void Raytracer_evaluateShadingModel (COLOR * color,
         VECTOR_SUB(shadow_ray.direction, light->pos, intersection);
         Vector_normalize(shadow_ray.direction);
 
+        shadow = FALSE;
         for (int j = 0; j < d_w->n_objects; ++j) {
 
             object = &(d_w->objects[j]);
 
             if (object == i_object) continue;
 
-            temp = Object_intersect(&shadow_ray, object);
+            distance = Object_intersect(&shadow_ray, object);
 
-            if (!isnan(temp) && (isnan(distance) || temp < distance)) {
-                distance = temp;
+            if (!isnan(distance)) {
+                shadow = TRUE;
+                break;
             }
-            // if (!(isnan(temp) || temp < 0) && (isnan(distance) || temp < distance)) {
-            //     distance = temp;
-            // }
         }
 
-        if (isnan(distance) || distance < 0) {
+        if (!shadow) {
             COLOR_SCALE(diffuse, material.color, light->i * material.i_diffuse * 
                 Raytracer_diffuse(normal, shadow_ray.direction));
             COLOR_SCALE(specular, material.color, light->i * material.i_specular *
@@ -166,7 +166,6 @@ __device__ void Raytracer_evaluateShadingModel (COLOR * color,
 
     VECTOR_COPY(ray->position, intersection);
     findReflectedRay(ray->direction, ray->direction, normal);
-    VECTOR_SCALE(ray->direction, -1);
 }
 
 __device__ float Raytracer_diffuse(float * n, float * l)

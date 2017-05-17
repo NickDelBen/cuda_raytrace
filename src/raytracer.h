@@ -13,6 +13,9 @@
 
 #define CUDA_DEVICE 0
 
+#define FALSE 0
+#define TRUE 1
+
 /******************************
 * Lunches the tracer kernel.
 * @param d_f             Frame memory location for storing the frame on the
