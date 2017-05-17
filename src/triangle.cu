@@ -1,6 +1,8 @@
 
 #include "triangle.h"
 
+#define INTERSECT_OFFSET 0.005
+
 // Reads triangle data from the specified file and sets specified triangle
 void Triangle_readTo (FILE * file, triangle_t * t)
 {
@@ -68,5 +70,5 @@ __device__ float Triangle_intersect (line_t * ray, triangle_t * t)
         return NAN;
     }
 
-    return d;
+    return d + INTERSECT_OFFSET;
 }

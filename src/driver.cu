@@ -12,7 +12,7 @@
 #define WINDOW_TITLE "CUDA Raytracer by Nick & Zaid\0"
 #define BLOCKS 512 
 #define THREADS 32
-#define MAX_REFLECTIONS 4
+#define MAX_REFLECTIONS 3
 #define SPEED_FACTOR 0.1
 
 camera_t * h_camera;
@@ -22,7 +22,6 @@ line_t   * d_rays;
 camera_t * d_camera;
 world_t  * h_world;
 float    * sphere_speeds;
-
 
 void do_work();
 void animate_spheres();
@@ -51,10 +50,8 @@ void do_work()
 	clock_t tick = clock();
 	// Trace the next frame
 	Raytracer(d_frame, d_rays, h_world, h_camera->width * h_camera->height, BLOCKS, THREADS, MAX_REFLECTIONS);
-	cudaDeviceSynchronize();
 	// Copy the raytraced frame back to the host
 	cudaMemcpy(canvas->pixels, d_frame, sizeof(COLOR) * CHANNELS * h_camera->width * h_camera->height, cudaMemcpyDeviceToHost);
-	cudaDeviceSynchronize();
 	clock_t tock = clock();
 	sprintf(canvas->message, "FPS: %.2lf\n", 1.0 / ((double)(tock - tick) / CLOCKS_PER_SEC));
 	animate_spheres();

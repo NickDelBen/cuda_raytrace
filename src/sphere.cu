@@ -35,9 +35,11 @@ __device__ float Sphere_intersect (line_t * ray, sphere_t * s)
         return -b / 2;
     } else {
         sqrtd = sqrtf(d);
-        c = (-b + sqrtd) / 2;
-        d = (-b - sqrtd) / 2;
-        return fabs(c) > fabs(d) ? d : c;
+        sqrtd = fmin(
+            (-b + sqrtd) / 2,
+            (-b - sqrtd) / 2
+        );
+        return sqrtd < 0 ? NAN : sqrtd;
     }
 }
 

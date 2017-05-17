@@ -15,7 +15,6 @@ void Raytracer(COLOR * d_f, line_t * d_r, world_t * w, int size, int blocks,
 {
     int b_work   = size / blocks,
         t_work   = b_work / threads,
-        r_size   = sizeof(line_t) * size,
         b_r_size = sizeof(line_t) * b_work,
         b_f_size = sizeof(COLOR) * CHANNELS * b_work,
         b_b_size = sizeof(float) * b_work,
@@ -24,24 +23,15 @@ void Raytracer(COLOR * d_f, line_t * d_r, world_t * w, int size, int blocks,
     // Copy animated world to device.
     world_t * d_w = World_toDevice(w, &b_w_size);
 
-    line_t * rays;
-    cudaMalloc(&rays, r_size);
-    cudaMemcpy(rays, d_r, r_size, cudaMemcpyDeviceToDevice);
-
-    // printf("Allocating %d bytes per block\n",
-    //     b_r_size + b_f_size + b_w_size + b_b_size);
     Raytracer_trace<<<blocks, threads, b_r_size + b_f_size + b_w_size + b_b_size>>>
-        (rays, d_f, d_w, b_w_size, b_work, t_work, max_reflections);
-    // CudaCheckError();
-    cudaDeviceSynchronize();
+        (d_r, d_f, d_w, b_w_size, b_work, t_work, max_reflections);
         
     World_freeDevice(d_w);
-
-    cudaFree(rays);
 }
 
-__global__ void Raytracer_trace (line_t * d_r, COLOR * d_f, world_t * w,
-    int w_size, int b_work, int t_work, int max_reflections)
+__global__ void Raytracer_trace (line_t * d_r, COLOR * d_f, 
+    world_t * w, int w_size, int b_work, int t_work,
+    int max_reflections)
 {
     int t_offset = threadIdx.x * t_work,
         offset   = blockIdx.x * b_work + t_offset;
@@ -62,8 +52,7 @@ __global__ void Raytracer_trace (line_t * d_r, COLOR * d_f, world_t * w,
 
     // Process all the pixels assigned to this thread
     for (int i = t_offset; i < t_offset + t_work; ++i) {
-        reflectivities[i] = Raytracer_calculatePixelColor(&frame[i * CHANNELS],
-            d_w, &rays[i]);
+        reflectivities[i] = Raytracer_calculatePixelColor(&frame[i * CHANNELS], d_w, &rays[i]);
     }
 
     float reflectivity;
@@ -78,13 +67,16 @@ __global__ void Raytracer_trace (line_t * d_r, COLOR * d_f, world_t * w,
                 COLOR_SCALE(reflection_color, reflectivities[j]);
                 COLOR_ADD(&frame[j * CHANNELS], &frame[j * CHANNELS], reflection_color);
 
-                reflectivities[j] = reflectivity;
+                if(!isnan(reflectivity)) {
+                    reflectivities[j] *= reflectivity;
+                } else {
+                    reflectivities[j] = NAN;
+                }
             }
         }
     }
 
     // Copy the results of the trace on the frame tile to the global memory.
-    memcpy(&d_r[offset], &rays[t_offset], sizeof(line_t) * t_work);
     memcpy(&d_f[offset * CHANNELS], &frame[t_offset * CHANNELS],
         sizeof(COLOR) * CHANNELS * t_work);
 }
@@ -100,11 +92,6 @@ __device__ float Raytracer_calculatePixelColor (COLOR * color, world_t * d_w,
 
     for (int i = 0; i < d_w->n_objects; ++i) {
         temp = Object_intersect(ray, &(d_w->objects[i]));
-
-        // if (!(isnan(temp) || temp < 0) && (isnan(distance) || temp < distance)) {
-        //     distance = temp;
-        //     object = &(d_w->objects[i]);
-        // }
 
         if (!isnan(temp) && (isnan(distance) || temp < distance)) {
             distance = temp;
@@ -179,6 +166,7 @@ __device__ void Raytracer_evaluateShadingModel (COLOR * color,
 
     VECTOR_COPY(ray->position, intersection);
     findReflectedRay(ray->direction, ray->direction, normal);
+    VECTOR_SCALE(ray->direction, -1);
 }
 
 __device__ float Raytracer_diffuse(float * n, float * l)

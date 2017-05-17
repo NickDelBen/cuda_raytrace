@@ -24,8 +24,8 @@
 * @param threads         The number of kernel threads.
 * @param max_reflections The number of possible bounces for a light ray.
 ******************************/
-void Raytracer(COLOR * d_f, line_t * d_r, world_t * w, int size,
-	int blocks, int threads, int max_reflections);
+void Raytracer(COLOR * d_f, line_t * d_r, world_t * w, int size, int blocks,
+	int threads, int max_reflections);
 
 /******************************
 * Traces the rays from the eye position into the scene.
